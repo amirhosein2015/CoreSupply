@@ -1,0 +1,76 @@
+# This is the 'Infrastructure' definition for CoreSupply
+version: '3.4'
+
+services:
+
+  # -----------------------------------------------
+  # INFRASTRUCTURE SERVICES
+  # -----------------------------------------------
+
+  # Catalog DB (MongoDB) - For Component/Part data
+  catalogdb:
+    image: mongo
+    container_name: core.catalogdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - coresupply-catalog-data:/data/db
+    networks:
+      - coresupply_network
+
+  # Quote DB (Redis) - For temporary quote/basket data
+  quotedb:
+    image: redis:alpine
+    container_name: core.quotedb
+    ports:
+      - "6379:6379"
+    networks:
+      - coresupply_network
+
+  # Pricing DB (PostgreSQL) - For customer-specific pricing rules
+  pricingdb:
+    image: postgres
+    container_name: core.pricingdb
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=Password12!
+      - POSTGRES_DB=pricing
+    volumes:
+      - coresupply-pricing-data:/var/lib/postgresql/data
+    networks:
+      - coresupply_network
+
+  # Procurement DB (SQL Server) - For finalized Purchase Orders
+  procurementdb:
+    image: "mcr.microsoft.com/mssql/server:2019-latest"
+    container_name: core.procurementdb
+    environment:
+      - SA_PASSWORD=Password12!
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    networks:
+      - coresupply_network
+
+  # EventBus (RabbitMQ) - For asynchronous communication
+  eventbus:
+    image: rabbitmq:3-management-alpine
+    container_name: core.eventbus
+    ports:
+      - "5672:5672"       # AMQP port
+      - "15672:15672"     # Management UI
+    networks:
+      - coresupply_network
+
+# -----------------------------------------------
+# Volumes & Networks Definitions
+# -----------------------------------------------
+volumes:
+  coresupply-catalog-data:
+  coresupply-pricing-data:
+
+networks:
+  coresupply_network:
+    driver: bridge
