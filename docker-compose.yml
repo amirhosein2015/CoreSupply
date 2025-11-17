@@ -64,6 +64,35 @@ services:
     networks:
       - coresupply_network
 
+
+
+
+  # -----------------------------------------------
+  # CORE SERVICES
+  # -----------------------------------------------
+
+  catalog.api:
+    image: ${DOCKER_REGISTRY-}catalogapi
+    build:
+      context: .
+      dockerfile: src/CoreSupply.Catalog.API/Dockerfile
+    ports:
+      - "8000:80" # Exposed port for testing, standard port 80 internally
+    environment:
+      # We use Development environment for ease of testing
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - catalogdb # Ensure Mongo is running before the API starts
+    networks:
+      - coresupply_network
+
+
+
+
+
+
+
+
 # -----------------------------------------------
 # Volumes & Networks Definitions
 # -----------------------------------------------
