@@ -74,14 +74,14 @@ Access Swagger
     Quote API → http://localhost:8001/swagger
 
 ## 🔮 Roadmap
-Project Setup & Docker Infrastructure
-Catalog Microservice (MongoDB)
-Quote/Basket Microservice (Redis + MongoDB)
-Container Orchestration & Health Checks
-API Gateway (Ocelot)
-Pricing Service (gRPC Communication)
-Event-Driven Architecture (RabbitMQ Integration)
-Aggregator Service (BFF Pattern)
+  - Project Setup & Docker Infrastructure
+  - Catalog Microservice (MongoDB)
+  - Quote/Basket Microservice (Redis + MongoDB)
+  - Container Orchestration & Health Checks
+  - API Gateway (Ocelot)
+  - Pricing Service (gRPC Communication)
+  - Event-Driven Architecture (RabbitMQ Integration)
+  - Aggregator Service (BFF Pattern)
 
 
 ## 👤 Author
