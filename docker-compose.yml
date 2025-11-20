@@ -1,13 +1,9 @@
-# This is the 'Infrastructure' definition for CoreSupply
-version: '3.4'
+﻿version: '3.4'
 
 services:
 
-  # -----------------------------------------------
-  # INFRASTRUCTURE SERVICES
-  # -----------------------------------------------
+  # --- INFRASTRUCTURE ---
 
-  # Catalog DB (MongoDB) - For Component/Part data
   catalogdb:
     image: mongo
     container_name: core.catalogdb
@@ -17,17 +13,40 @@ services:
       - coresupply-catalog-data:/data/db
     networks:
       - coresupply_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping: 1}).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Quote DB (Redis) - For temporary quote/basket data
-  quotedb:
+  redis:
     image: redis:alpine
-    container_name: core.quotedb
+    container_name: core.redis
     ports:
       - "6379:6379"
     networks:
       - coresupply_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # Pricing DB (PostgreSQL) - For customer-specific pricing rules
+  quotedb:
+    image: mongo
+    container_name: core.quotedb
+    volumes:
+      - coresupply-quote-data:/data/db
+    networks:
+      - coresupply_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping: 1}).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   pricingdb:
     image: postgres
     container_name: core.pricingdb
@@ -41,8 +60,13 @@ services:
       - coresupply-pricing-data:/var/lib/postgresql/data
     networks:
       - coresupply_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d pricing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Procurement DB (SQL Server) - For finalized Purchase Orders
   procurementdb:
     image: "mcr.microsoft.com/mssql/server:2019-latest"
     container_name: core.procurementdb
@@ -53,52 +77,67 @@ services:
       - "1433:1433"
     networks:
       - coresupply_network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password12!", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
-  # EventBus (RabbitMQ) - For asynchronous communication
   eventbus:
     image: rabbitmq:3-management-alpine
     container_name: core.eventbus
     ports:
-      - "5672:5672"       # AMQP port
-      - "15672:15672"     # Management UI
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - coresupply_network
 
-
-
-
-  # -----------------------------------------------
-  # CORE SERVICES
-  # -----------------------------------------------
+  # --- CORE SERVICES ---
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
       context: .
-      dockerfile: src/CoreSupply.Catalog.API/Dockerfile
+      dockerfile: CoreSupply.Catalog.API/Dockerfile
+    # اصلاح پورت: اتصال پورت 8000 هاست به 8080 کانتینر
     ports:
-      - "8000:80" # Exposed port for testing, standard port 80 internally
+      - "8000:8080"
     environment:
-      # We use Development environment for ease of testing
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DatabaseSettings__ConnectionString=mongodb://core.catalogdb:27017
     depends_on:
-      - catalogdb # Ensure Mongo is running before the API starts
+      catalogdb:
+        condition: service_healthy
     networks:
       - coresupply_network
 
+  quote.api:
+    image: ${DOCKER_REGISTRY-}quoteapi
+    build:
+      context: .
+      dockerfile: CoreSupply.Quote.API/Dockerfile
+    # اصلاح پورت: اتصال پورت 8001 هاست به 8081 کانتینر
+    ports:
+      - "8001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8081
+      - DatabaseSettings__ConnectionString=mongodb://core.quotedb:27017
+      - CacheSettings__ConnectionString=core.redis:6379
+    depends_on:
+      quotedb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - coresupply_network
 
-
-
-
-
-
-
-# -----------------------------------------------
-# Volumes & Networks Definitions
-# -----------------------------------------------
 volumes:
   coresupply-catalog-data:
   coresupply-pricing-data:
+  coresupply-quote-data:
 
 networks:
   coresupply_network:

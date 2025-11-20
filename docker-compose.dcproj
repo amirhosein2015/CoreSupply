@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
+<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <!-- Use the main Project GUID from .sln file -->
+    <ProjectGuid>{E14F44A8-1111-4E88-A6F7-009A6C0B836D}</ProjectGuid>
+    <!-- We set the default launch to Catalog.API, but VS will run ALL set to Start -->
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerLaunchUrl>http://{ServiceIPAddress}</DockerLaunchUrl>
+    <DockerLaunchUrl>http://localhost:8000/swagger</DockerLaunchUrl>
     <DockerServiceName>catalog.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />
-    <ProjectReference Include="CoreSupply.Catalog.API\CoreSupply.Catalog.API.csproj" />
+    <None Include=".dockerignore" />
+    <!-- Ensure the Docker override file is included, even if empty -->
   </ItemGroup>
 </Project>
