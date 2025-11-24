@@ -1,0 +1,6 @@
+@CoreSupply.APIGateway_HostAddress = http://localhost:5217
+
+GET {{CoreSupply.APIGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

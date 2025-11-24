@@ -1,0 +1,44 @@
+{
+  "Routes": [
+    // --------------------------------------------------------------------------------
+    // 1. Routing for Catalog API
+    // Host: catalog.api (نام سرویس در شبکه داخلی داکر)
+    // Port: 8080 (پورت داخلی کانتینر Catalog.API)
+    // --------------------------------------------------------------------------------
+    {
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog.api",
+          "Port": 8080 // هماهنگ با ASPNETCORE_URLS=http://+:8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/catalog/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "Priority": 1
+    },
+
+    // --------------------------------------------------------------------------------
+    // 2. Routing for Quote/Basket API
+    // Host: quote.api (نام سرویس در شبکه داخلی داکر)
+    // Port: 8081 (پورت داخلی کانتینر Quote.API)
+    // --------------------------------------------------------------------------------
+    {
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "quote.api",
+          "Port": 8081 // هماهنگ با ASPNETCORE_URLS=http://+:8081
+        }
+      ],
+      "UpstreamPathTemplate": "/api/quote/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "Priority": 1
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:8002" // پورت خارجی Gateway
+  }
+}

@@ -1,4 +1,175 @@
-﻿version: '3.4'
+﻿
+# version: '3.4'
+
+# services:
+
+#   # --- INFRASTRUCTURE ---
+
+#   catalogdb:
+#     image: mongo
+#     container_name: core.catalogdb
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - coresupply-catalog-data:/data/db
+#     networks:
+#       - coresupply_network
+#     healthcheck:
+#       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping: 1}).ok"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 30s
+
+#   redis:
+#     image: redis:alpine
+#     container_name: core.redis
+#     ports:
+#       - "6379:6379"
+#     networks:
+#       - coresupply_network
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+
+#   quotedb:
+#     image: mongo
+#     container_name: core.quotedb
+#     volumes:
+#       - coresupply-quote-data:/data/db
+#     networks:
+#       - coresupply_network
+#     healthcheck:
+#       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping: 1}).ok"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 30s
+
+#   pricingdb:
+#     image: postgres
+#     container_name: core.pricingdb
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       - POSTGRES_USER=admin
+#       - POSTGRES_PASSWORD=Password12!
+#       - POSTGRES_DB=pricing
+#     volumes:
+#       - coresupply-pricing-data:/var/lib/postgresql/data
+#     networks:
+#       - coresupply_network
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U admin -d pricing"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 30s
+
+#   procurementdb:
+#     image: "mcr.microsoft.com/mssql/server:2019-latest"
+#     container_name: core.procurementdb
+#     environment:
+#       - SA_PASSWORD=Password12!
+#       - ACCEPT_EULA=Y
+#     ports:
+#       - "1433:1433"
+#     networks:
+#       - coresupply_network
+#     healthcheck:
+#       test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password12!", "-Q", "SELECT 1"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 60s
+
+#   eventbus:
+#     image: rabbitmq:3-management-alpine
+#     container_name: core.eventbus
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     networks:
+#       - coresupply_network
+
+#   # --- CORE SERVICES ---
+
+#   catalog.api:
+#     image: ${DOCKER_REGISTRY-}catalogapi
+#     build:
+#       context: .
+#       dockerfile: CoreSupply.Catalog.API/Dockerfile
+#     # پورت‌های اصلی شما که تغییر نکرده‌اند
+#     ports:
+#       - "8000:8080"
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ASPNETCORE_URLS=http://+:8080
+#       - DatabaseSettings__ConnectionString=mongodb://core.catalogdb:27017
+#     depends_on:
+#       catalogdb:
+#         condition: service_healthy
+#     networks:
+#       - coresupply_network
+
+#   quote.api:
+#     image: ${DOCKER_REGISTRY-}quoteapi
+#     build:
+#       context: .
+#       dockerfile: CoreSupply.Quote.API/Dockerfile
+#     # پورت‌های اصلی شما که تغییر نکرده‌اند
+#     ports:
+#       - "8001:8081"
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ASPNETCORE_URLS=http://+:8081
+#       - DatabaseSettings__ConnectionString=mongodb://core.quotedb:27017
+#       - CacheSettings__ConnectionString=core.redis:6379
+#     depends_on:
+#       quotedb:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     networks:
+#       - coresupply_network
+      
+#   # --------------------------------------------------------------------
+#   # NEW: API Gateway Service (Ocelot)
+#   # --------------------------------------------------------------------
+#   apigateway:
+#     image: ${DOCKER_REGISTRY-}apigateway
+#     build:
+#       context: .
+#       dockerfile: CoreSupply.APIGateway/Dockerfile
+#     ports:
+#       - "8002:80" # پورت خارجی 8002 برای دسترسی به Gateway
+#     depends_on:
+#       catalog.api:
+#         condition: service_started
+#       quote.api:
+#         condition: service_started
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#     networks:
+#       - coresupply_network
+
+# volumes:
+#   coresupply-catalog-data:
+#   coresupply-pricing-data:
+#   coresupply-quote-data:
+
+# networks:
+#   coresupply_network:
+#     driver: bridge
+
+
+
+
+
+
+version: '3.4'
 
 services:
 
@@ -99,8 +270,8 @@ services:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
       context: .
-      dockerfile: CoreSupply.Catalog.API/Dockerfile
-    # اصلاح پورت: اتصال پورت 8000 هاست به 8080 کانتینر
+      dockerfile: src/CoreSupply.Catalog.API/Dockerfile # مسیردهی اصلاح شده
+    # پورت‌های اصلی شما که تغییر نکرده‌اند
     ports:
       - "8000:8080"
     environment:
@@ -117,8 +288,8 @@ services:
     image: ${DOCKER_REGISTRY-}quoteapi
     build:
       context: .
-      dockerfile: CoreSupply.Quote.API/Dockerfile
-    # اصلاح پورت: اتصال پورت 8001 هاست به 8081 کانتینر
+      dockerfile: src/CoreSupply.Quote.API/Dockerfile # مسیردهی اصلاح شده
+    # پورت‌های اصلی شما که تغییر نکرده‌اند
     ports:
       - "8001:8081"
     environment:
@@ -131,6 +302,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - coresupply_network
+      
+  # --------------------------------------------------------------------
+  # NEW: API Gateway Service (Ocelot) - مسیردهی به پوشه src/
+  # --------------------------------------------------------------------
+  apigateway:
+    image: ${DOCKER_REGISTRY-}apigateway
+    build:
+      context: .
+      dockerfile: src/CoreSupply.APIGateway/Dockerfile # مسیردهی اصلاح شده
+    ports:
+      - "8002:80" # پورت خارجی 8002 برای دسترسی به Gateway
+    depends_on:
+      catalog.api:
+        condition: service_started
+      quote.api:
+        condition: service_started
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
     networks:
       - coresupply_network
 
