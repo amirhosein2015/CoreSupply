@@ -1,4 +1,5 @@
 # 🏭 CoreSupply - B2B Industrial Supply Chain Microservices
+![Microservice Diagram](https://github.com/user-attachments/assets/f2b1d7ed-3fcf-4b6b-a98a-3d7769e3d9e1)
 
 ## 📝 Overview
 CoreSupply is a comprehensive backend solution designed for the complex needs of Industrial and Automotive B2B Supply Chains.
