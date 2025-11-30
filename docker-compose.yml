@@ -18,6 +18,7 @@
       retries: 5
       start_period: 30s
 
+
   redis:
     image: redis:7.0-alpine
     container_name: core.redis
