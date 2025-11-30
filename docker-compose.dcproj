@@ -11,6 +11,7 @@
     <DockerServiceName>catalog.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="docker-compose-mini.yml" />
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
     <!-- Ensure the Docker override file is included, even if empty -->

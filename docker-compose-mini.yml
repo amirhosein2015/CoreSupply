@@ -1,9 +1,11 @@
-﻿services:
+﻿version: '3.4'
 
-  # --- INFRASTRUCTURE ---
+services:
+
+  # --- INFRASTRUCTURE (Minimal) ---
 
   catalogdb:
-    image: mongo:6.0
+    image: mongo
     container_name: core.catalogdb
     ports:
       - "27017:27017"
@@ -19,7 +21,7 @@
       start_period: 30s
 
   redis:
-    image: redis:7.0-alpine
+    image: redis:alpine
     container_name: core.redis
     ports:
       - "6379:6379"
@@ -32,7 +34,7 @@
       retries: 5
 
   quotedb:
-    image: mongo:6.0
+    image: mongo
     container_name: core.quotedb
     volumes:
       - coresupply-quote-data:/data/db
@@ -45,63 +47,16 @@
       retries: 5
       start_period: 30s
 
-  pricingdb:
-    image: postgres
-    container_name: core.pricingdb
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=Password12!
-      - POSTGRES_DB=pricing
-    volumes:
-      - coresupply-pricing-data:/var/lib/postgresql/data
-    networks:
-      - coresupply_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d pricing"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  procurementdb:
-    image: "mcr.microsoft.com/mssql/server:2019-latest"
-    container_name: core.procurementdb
-    environment:
-      - SA_PASSWORD=Password12!
-      - ACCEPT_EULA=Y
-    ports:
-      - "1433:1433"
-    networks:
-      - coresupply_network
-    healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password12!", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
-  eventbus:
-    image: rabbitmq:3.12-management
-    container_name: core.eventbus
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - coresupply_network
-
-
-  # --- CORE SERVICES (FINAL SAFE PORTS: 9000+) ---
-
+  # --- CORE SERVICES ---
+  # مسیردهی فلت (تایید شده)
+  
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
       context: .
-      dockerfile: CoreSupply.Catalog.API/Dockerfile
-    # **** پورت جدید: 9001 ****
+      dockerfile: CoreSupply.Catalog.API/Dockerfile 
     ports:
-      - "9001:8080" 
+      - "8000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
@@ -116,10 +71,9 @@
     image: ${DOCKER_REGISTRY-}quoteapi
     build:
       context: .
-      dockerfile: CoreSupply.Quote.API/Dockerfile
-    # **** پورت جدید: 9002 ****
+      dockerfile: CoreSupply.Quote.API/Dockerfile 
     ports:
-      - "9002:8081"
+      - "8001:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
@@ -137,10 +91,9 @@
     image: ${DOCKER_REGISTRY-}apigateway
     build:
       context: .
-      dockerfile: CoreSupply.APIGateway/Dockerfile
-    # **** پورت جدید: 9000 ****
+      dockerfile: CoreSupply.APIGateway/Dockerfile 
     ports:
-      - "9000:8080"
+      - "8002:80" 
     depends_on:
       catalog.api:
         condition: service_started
@@ -148,14 +101,12 @@
         condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
     networks:
       - coresupply_network
 
-
 volumes:
   coresupply-catalog-data:
-  coresupply-pricing-data:
+  # coresupply-pricing-data: # حذف شد
   coresupply-quote-data:
 
 networks:

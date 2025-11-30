@@ -2,30 +2,26 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-
 # 1. کپی فایل Solution
-# Solution در ریشه پروژه است
+# Solution در ریشه کانتینر (/src) کپی می‌شود.
 COPY CoreSupply.sln .
 
-# 2. کپی فایل پروژه Gateway (مسیر جدید)
-# پروژه Gateway اکنون داخل src است.
-COPY src/CoreSupply.APIGateway/CoreSupply.APIGateway.csproj src/CoreSupply.APIGateway/
-
-# 3. کپی فایل پروژه‌های وابسته (مسیر جدید)
-# سرویس‌های Catalog و Quote نیز داخل src هستند.
-COPY src/CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj src/CoreSupply.Catalog.API/
-COPY src/CoreSupply.Quote.API/CoreSupply.Quote.API.csproj src/CoreSupply.Quote.API/
-# ... هر پروژه دیگری که در Solution شما وجود دارد
+# 2. کپی فایل‌های پروژه (.csproj) برای بازیابی وابستگی‌ها (Restore)
+# 🎯 FIX: مسیردهی اکنون به صورت "ProjectFolder/ProjectFile.csproj" است (بدون src/).
+COPY CoreSupply.APIGateway/CoreSupply.APIGateway.csproj CoreSupply.APIGateway/
+COPY CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj CoreSupply.Catalog.API/
+COPY CoreSupply.Quote.API/CoreSupply.Quote.API.csproj CoreSupply.Quote.API/
 
 # اجرای Restore (بازیابی وابستگی‌ها)
-RUN dotnet restore src/CoreSupply.APIGateway/CoreSupply.APIGateway.csproj
+RUN dotnet restore CoreSupply.APIGateway/CoreSupply.APIGateway.csproj
 
-# 4. کپی کردن تمام فایل‌های سورس (از ریشه Build)
+# 3. کپی کردن تمام فایل‌های سورس (از ریشه Build)
+# تمام پوشه‌های پروژه (CoreSupply.APIGateway، CoreSupply.Catalog.API و CoreSupply.Quote.API) کپی می‌شوند.
 COPY . .
 
-# 5. انتشار (Publish) پروژه به حالت Release
-# تغییر WORKDIR به مسیر نهایی پروژه داخل کانتینر
-WORKDIR "/src/src/CoreSupply.APIGateway"
+# 4. انتشار (Publish) پروژه به حالت Release
+# 🎯 FIX: WORKDIR اکنون به مسیر صحیح داخل کانتینر تنظیم شده است.
+WORKDIR "/src/CoreSupply.APIGateway"
 RUN dotnet publish "CoreSupply.APIGateway.csproj" -c Release -o /app/publish
 
 # مرحله دوم: استفاده از ایمیج کم‌حجم‌تر و بهینه‌شده برای اجرا (Runtime)
