@@ -1,6 +1,7 @@
-﻿services:
+﻿version: '3.4'
 
-  # --- INFRASTRUCTURE ---
+services:
+  # --- INFRASTRUCTURE (SAFE PORTS: 6000+) ---
 
   catalogdb:
     image: mongo:6.0
@@ -17,7 +18,6 @@
       timeout: 5s
       retries: 5
       start_period: 30s
-
 
   redis:
     image: redis:7.0-alpine
@@ -50,7 +50,7 @@
     image: postgres
     container_name: core.pricingdb
     ports:
-      - "5432:5432"
+      - "6432:5432" # Safe Port
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=Password12!
@@ -66,8 +66,27 @@
       retries: 5
       start_period: 30s
 
+  identitydb:
+    image: postgres:15-alpine
+    container_name: core.identitydb
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=Password12!
+      - POSTGRES_DB=identitydb
+    ports:
+      - "6433:5432" # Safe Port
+    volumes:
+      - coresupply-identity-data:/var/lib/postgresql/data
+    networks:
+      - coresupply_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d identitydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   procurementdb:
-    image: "mcr.microsoft.com/mssql/server:2019-latest"
+    image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: core.procurementdb
     environment:
       - SA_PASSWORD=Password12!
@@ -87,11 +106,10 @@
     image: rabbitmq:3.12-management
     container_name: core.eventbus
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "6672:5672"   # *** تغییر به پورت امن 6672 ***
+      - "16672:15672" # *** تغییر پورت پنل مدیریت ***
     networks:
       - coresupply_network
-
 
   # --- CORE SERVICES (FINAL SAFE PORTS: 9000+) ---
 
@@ -100,7 +118,6 @@
     build:
       context: .
       dockerfile: CoreSupply.Catalog.API/Dockerfile
-    # **** پورت جدید: 9001 ****
     ports:
       - "9001:8080" 
     environment:
@@ -118,7 +135,6 @@
     build:
       context: .
       dockerfile: CoreSupply.Quote.API/Dockerfile
-    # **** پورت جدید: 9002 ****
     ports:
       - "9002:8081"
     environment:
@@ -133,13 +149,32 @@
         condition: service_healthy
     networks:
       - coresupply_network
-      
+
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: CoreSupply.Identity.API/Dockerfile
+    ports:
+      - "9003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DatabaseSettings__ConnectionString=Host=core.identitydb;Port=5432;Database=identitydb;Username=admin;Password=Password12!;
+      - JwtSettings__Secret=ThisIsTheSecureKeyForCoreSupplyProject2025!
+      - JwtSettings__Issuer=CoreSupplyIdentity
+      - JwtSettings__Audience=CoreSupplyClients
+    depends_on:
+      identitydb:
+        condition: service_healthy
+    networks:
+      - coresupply_network
+
   apigateway:
     image: ${DOCKER_REGISTRY-}apigateway
     build:
       context: .
       dockerfile: CoreSupply.APIGateway/Dockerfile
-    # **** پورت جدید: 9000 ****
     ports:
       - "9000:8080"
     depends_on:
@@ -147,17 +182,19 @@
         condition: service_started
       quote.api:
         condition: service_started
+      identity.api:
+        condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
     networks:
       - coresupply_network
 
-
 volumes:
   coresupply-catalog-data:
   coresupply-pricing-data:
   coresupply-quote-data:
+  coresupply-identity-data:
 
 networks:
   coresupply_network:

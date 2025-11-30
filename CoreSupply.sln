@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Quote.API", "CoreSupply.Quote.API\CoreSupply.Quote.API.csproj", "{4C3A5AAF-A2B5-46CC-A995-DC5B0F9DD1E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.APIGateway", "CoreSupply.APIGateway\CoreSupply.APIGateway.csproj", "{0CBCEA0B-048F-416A-AB19-ED2115EBDEE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Identity.API", "CoreSupply.Identity.API\CoreSupply.Identity.API.csproj", "{BFC718A9-C8A8-49B3-9CA7-9EDDCA7F5033}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{0CBCEA0B-048F-416A-AB19-ED2115EBDEE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CBCEA0B-048F-416A-AB19-ED2115EBDEE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CBCEA0B-048F-416A-AB19-ED2115EBDEE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFC718A9-C8A8-49B3-9CA7-9EDDCA7F5033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC718A9-C8A8-49B3-9CA7-9EDDCA7F5033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC718A9-C8A8-49B3-9CA7-9EDDCA7F5033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC718A9-C8A8-49B3-9CA7-9EDDCA7F5033}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
