@@ -1,0 +1,6 @@
+@CoreSupply.Ordering.API_HostAddress = http://localhost:5001
+
+GET {{CoreSupply.Ordering.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
