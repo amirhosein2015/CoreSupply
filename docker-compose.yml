@@ -170,6 +170,36 @@ services:
     networks:
       - coresupply_network
 
+
+  ordering.api:
+    image: ${DOCKER_REGISTRY-}orderingapi
+    build:
+      context: .
+      dockerfile: CoreSupply.Ordering.API/Dockerfile
+    ports:
+      - "9004:8080" # پورت جدید 9004
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # کانکشن استرینگ برای SQL Server (دقت کنید به پورت 1433 کانتینر وصل می‌شود)
+      - ConnectionStrings__OrderingConnectionString=Server=core.procurementdb,1433;Database=OrderingDb;User Id=sa;Password=Password12!;TrustServerCertificate=True;
+    depends_on:
+      procurementdb: # منتظر می‌ماند تا SQL Server روشن شود
+        condition: service_started
+    networks:
+      - coresupply_network
+
+
+
+
+
+
+
+
+
+
+
+
   apigateway:
     image: ${DOCKER_REGISTRY-}apigateway
     build:
