@@ -1,28 +1,36 @@
-using CoreSupply.Quote.API.Repositories;
-using Microsoft.Extensions.DependencyInjection;
+﻿using CoreSupply.Quote.API.Repositories;
+using MassTransit; // اضافه شد
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- Add services to the container ---
 
-// --- Redis Configuration for Caching/Basket ---
+// 1. Redis Configuration
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    // Retrieve the connection string from appsettings.json
     options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
 });
 
-// --- Dependency Injection for Repositories ---
+// 2. Repositories
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 
+// 3. MassTransit Configuration (اضافه شده برای ارسال پیام)
+builder.Services.AddMassTransit(config => {
+    config.UsingRabbitMq((ctx, cfg) => {
+        // اتصال به RabbitMQ داکر
+        cfg.Host("amqp://guest:guest@core.eventbus:5672");
+    });
+});
+
+// 4. API Services
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- Pipeline ---
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -30,7 +38,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
