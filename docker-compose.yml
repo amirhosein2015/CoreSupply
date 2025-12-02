@@ -206,11 +206,13 @@ services:
       context: .
       dockerfile: CoreSupply.APIGateway/Dockerfile
     ports:
-      - "9000:8080"
+      - "9000:8080" # پورت خارجی 9000 به پورت داخلی 8080
     depends_on:
       catalog.api:
         condition: service_started
       quote.api:
+        condition: service_started
+      ordering.api:
         condition: service_started
       identity.api:
         condition: service_started
@@ -219,6 +221,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080
     networks:
       - coresupply_network
+
 
 volumes:
   coresupply-catalog-data:

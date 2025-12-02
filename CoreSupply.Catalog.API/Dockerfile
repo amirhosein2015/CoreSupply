@@ -1,30 +1,33 @@
-﻿# Dockerfile for CoreSupply.Quote.API
-#
-# Stage 1: Build the application
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-# 👆 این مسیر داخلی کانتینر است و باید باقی بماند
+﻿# Stage 1: Base Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
 
-# 1. Copy Solution File (.sln) and all Project Files (.csproj)
-# مسیر کپی کردن از کامپیوتر شما به داخل کانتینر:
-COPY ["CoreSupply.sln", "."]
-COPY ["CoreSupply.Quote.API/CoreSupply.Quote.API.csproj", "CoreSupply.Quote.API/"]
+# Stage 2: Build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+
+# کپی کردن فایل پروژه کاتالوگ
 COPY ["CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj", "CoreSupply.Catalog.API/"]
 
+# بازیابی پکیج‌ها
+RUN dotnet restore "./CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj"
 
-# 2. Restore dependencies
-RUN dotnet restore "CoreSupply.Quote.API/CoreSupply.Quote.API.csproj"
-
-# 3. Copy the rest of the source code
+# کپی کردن کل کدها
 COPY . .
 
-# 4. Publish the project
-WORKDIR /src/CoreSupply.Quote.API
-RUN dotnet publish "CoreSupply.Quote.API.csproj" -c Release -o /app/publish
+# بیلد کردن پروژه
+WORKDIR "/src/CoreSupply.Catalog.API"
+RUN dotnet build "./CoreSupply.Catalog.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Stage 2: Publish the application (Final Image)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Stage 3: Publish
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./CoreSupply.Catalog.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# Stage 4: Final
+FROM base AS final
 WORKDIR /app
-# Copy the published output from the build stage
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "CoreSupply.Quote.API.dll"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "CoreSupply.Catalog.API.dll"]

@@ -1,44 +1,59 @@
 {
   "Routes": [
-    // --------------------------------------------------------------------------------
-    // 1. Routing for Catalog API
-    // Host: catalog.api (نام سرویس در شبکه داخلی داکر)
-    // Port: 8080 (پورت داخلی کانتینر Catalog.API)
-    // --------------------------------------------------------------------------------
+    // --- Catalog API ---
     {
-      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamPathTemplate": "/api/v1/catalog/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "catalog.api",
-          "Port": 8080 // هماهنگ با ASPNETCORE_URLS=http://+:8080
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/catalog/{everything}",
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
-      "Priority": 1
+      "UpstreamPathTemplate": "/catalog/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
-
-    // --------------------------------------------------------------------------------
-    // 2. Routing for Quote/Basket API
-    // Host: quote.api (نام سرویس در شبکه داخلی داکر)
-    // Port: 8081 (پورت داخلی کانتینر Quote.API)
-    // --------------------------------------------------------------------------------
+    // --- Basket API (Quote) ---
     {
-      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamPathTemplate": "/api/v1/basket/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "quote.api",
-          "Port": 8081 // هماهنگ با ASPNETCORE_URLS=http://+:8081
+          "Port": 8081
         }
       ],
-      "UpstreamPathTemplate": "/api/quote/{everything}",
-      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
-      "Priority": 1
+      "UpstreamPathTemplate": "/basket/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "DELETE" ]
+    },
+    // --- Ordering API ---
+    {
+      "DownstreamPathTemplate": "/api/v1/order/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ordering.api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/ordering/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ]
+    },
+    // --- Identity API ---
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/{everything}",
+      "UpstreamHttpMethod": [ "POST" ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:8002" // پورت خارجی Gateway
+    "BaseUrl": "http://localhost:9000"
   }
 }
