@@ -136,7 +136,7 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 
 ## 👨‍💻 Author
 
-**Amirhosein Momeni**
+**Abdollah Mohajeri**
 *   *Senior Software Engineer & Cloud Architect*
 *   Focus: Distributed Systems, .NET Ecosystem, Cloud-Native Solutions.
 *   GitHub: [amirhosein2015](https://github.com/amirhosein2015)
