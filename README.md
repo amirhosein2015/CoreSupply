@@ -11,7 +11,6 @@
 **CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
 ![Microservice Diagram](https://github.com/user-attachments/assets/709b8dce-29a7-41bb-844b-85caeb50a1ec)
 
----
 
 ## 🏗️ High-Level Architecture
 
@@ -34,6 +33,10 @@ graph TD
         Catalog --> CatDB[(MongoDB)]
         Basket --> Redis[(Redis Cache)]
         Ordering --> OrderDB[(SQL Server)]
+        
+        Ordering -.-> Seq[Seq Logging Server]
+        Basket -.-> Seq
+        Identity -.-> Seq
     end
 ```
 
@@ -54,10 +57,10 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **API Gateway:** Unified entry point using **Ocelot** for routing and aggregation.
 *   **Resilient Connectivity:** Retry policies and circuit breakers (via MassTransit).
 
-### **3. DevOps & Infrastructure**
-*   **Docker Compose:** Zero-config deployment of 12+ containers (Services + Databases + Broker).
+### **3. Observability & DevOps**
+*   **Centralized Logging:** Structured logging aggregation using **Serilog** and **Seq**.
+*   **Docker Compose:** Zero-config deployment of 15+ containers (Services + Databases + Broker + Monitoring).
 *   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
-*   **Infrastructure as Code:** Fully containerized environment.
 
 ---
 
@@ -70,12 +73,13 @@ This project demonstrates mastery of advanced software engineering concepts requ
 | **Quote API** | Basket & B2B Quote Management | .NET 8, **MassTransit Publisher** | **Redis** | 9002 |
 | **Ordering API** | Order Lifecycle (Core Domain) | .NET 8, **DDD**, **CQRS**, **Consumer** | **SQL Server** | 9004 |
 | **API Gateway** | Unified Routing & Security | Ocelot | - | 9000 |
+| **Seq** | **Centralized Log Dashboard** | Datalust Seq | - | 5340 |
 
 ### **Shared Kernel (BuildingBlocks)**
 A centralized class library that enforces standards across all microservices:
 *   **CQRS Abstractions:** `ICommand`, `IQuery`, `ICommandHandler`.
 *   **DDD Base Classes:** `Entity`, `AggregateRoot`, `IDomainEvent`.
-*   **Behaviors:** `ValidationBehavior` (FluentValidation pipeline).
+*   **Cross-Cutting Concerns:** `LoggingExtensions` (Serilog config), `ValidationBehavior`.
 
 ---
 
@@ -101,6 +105,7 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 
 3.  **Access the System:**
     *   **Unified API Gateway:** `http://localhost:9000/catalog`
+    *   **Log Dashboard (Seq):** `http://localhost:5340` (admin / Password12!)
     *   **RabbitMQ Dashboard:** `http://localhost:16672` (guest/guest)
     *   **Swagger UI:** Available on ports 9001-9004.
 
@@ -113,11 +118,10 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 1.  Open **Basket Swagger** (`localhost:9002`).
 2.  Create a basket using `POST /api/v1/Basket`.
 3.  Call `POST /api/v1/Basket/Checkout`.
-4.  Check **Ordering Service Logs**:
-    ```bash
-    docker logs coresupply-ordering.api-1
-    ```
-    ✅ *Success Message:* `Order created successfully with Id: ...`
+4.  **Verify via Observability (Recommended):**
+    *   Open **Seq Dashboard** (`http://localhost:5340`).
+    *   Filter logs for `ApplicationName = "CoreSupply.Ordering.API"`.
+    *   ✅ Look for: `Order created successfully with Id: ...`
 
 ---
 
@@ -127,7 +131,7 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **Infrastructure** (Docker, SQL, Mongo, Redis, Postgres)
 *   [x] **Event Bus** (RabbitMQ + MassTransit implementation)
 *   [x] **API Gateway** (Ocelot Routing)
-*   [ ] **Observability:** OpenTelemetry + Jaeger (Distributed Tracing) & ELK Stack.
+*   [x] **Observability** (Seq & Serilog Structured Logging)
 *   [ ] **Resilience:** Polly policies (Retry, Circuit Breaker) for database reliability.
 *   [ ] **Testing:** Integration tests using **Testcontainers**.
 *   [ ] **CI/CD:** GitHub Actions pipelines.
@@ -144,3 +148,4 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 ---
 *Designed with ❤️ for the Industrial Sector.*
 ```
+
