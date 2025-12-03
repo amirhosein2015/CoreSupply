@@ -10,7 +10,8 @@ WORKDIR /src
 
 # کپی کردن فایل پروژه کاتالوگ
 COPY ["CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj", "CoreSupply.Catalog.API/"]
-
+COPY ["CoreSupply.BuildingBlocks/CoreSupply.BuildingBlocks.csproj", "CoreSupply.BuildingBlocks/"]
+# ...
 # بازیابی پکیج‌ها
 RUN dotnet restore "./CoreSupply.Catalog.API/CoreSupply.Catalog.API.csproj"
 

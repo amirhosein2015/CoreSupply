@@ -32,6 +32,22 @@ services:
       timeout: 3s
       retries: 5
 
+  # --- NEW: SEQ LOGGING SERVER ---
+  seq:
+    image: datalust/seq:latest
+    container_name: core.seq
+    ports:
+      - "5340:80"
+      - "5341:5341"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD_HASH=phArgon2$v=19$m=65536,t=3,p=4$U2VxQWRtaW4xMjM0NQ$X/L7/q/X/L7/q/X/L7/q/X/L7/q/X/L7/q/X/L7/q/X
+      # یا روش ساده‌تر (برای محیط توسعه):
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Password12!
+    networks:
+      - coresupply_network
+
+
   quotedb:
     image: mongo:6.0
     container_name: core.quotedb
@@ -106,8 +122,8 @@ services:
     image: rabbitmq:3.12-management
     container_name: core.eventbus
     ports:
-      - "6672:5672"   # *** تغییر به پورت امن 6672 ***
-      - "16672:15672" # *** تغییر پورت پنل مدیریت ***
+      - "6672:5672"
+      - "16672:15672"
     networks:
       - coresupply_network
 
@@ -170,35 +186,22 @@ services:
     networks:
       - coresupply_network
 
-
   ordering.api:
     image: ${DOCKER_REGISTRY-}orderingapi
     build:
       context: .
       dockerfile: CoreSupply.Ordering.API/Dockerfile
     ports:
-      - "9004:8080" # پورت جدید 9004
+      - "9004:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      # کانکشن استرینگ برای SQL Server (دقت کنید به پورت 1433 کانتینر وصل می‌شود)
       - ConnectionStrings__OrderingConnectionString=Server=core.procurementdb,1433;Database=OrderingDb;User Id=sa;Password=Password12!;TrustServerCertificate=True;
     depends_on:
-      procurementdb: # منتظر می‌ماند تا SQL Server روشن شود
+      procurementdb:
         condition: service_started
     networks:
       - coresupply_network
-
-
-
-
-
-
-
-
-
-
-
 
   apigateway:
     image: ${DOCKER_REGISTRY-}apigateway
@@ -206,7 +209,7 @@ services:
       context: .
       dockerfile: CoreSupply.APIGateway/Dockerfile
     ports:
-      - "9000:8080" # پورت خارجی 9000 به پورت داخلی 8080
+      - "9000:8080"
     depends_on:
       catalog.api:
         condition: service_started
@@ -221,7 +224,6 @@ services:
       - ASPNETCORE_URLS=http://+:8080
     networks:
       - coresupply_network
-
 
 volumes:
   coresupply-catalog-data:

@@ -2,8 +2,15 @@ using CoreSupply.Catalog.API.Data;
 using CoreSupply.Catalog.API.Repositories;
 using CoreSupply.Catalog.API.Repositories; // For IComponentRepository and ComponentRepository
 using Microsoft.Extensions.Configuration; // Ensure this is present
+using CoreSupply.BuildingBlocks.Logging;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddCustomSerilog();
+
+
 
 // Add services to the container.
 

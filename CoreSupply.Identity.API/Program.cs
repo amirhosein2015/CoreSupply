@@ -5,8 +5,13 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using CoreSupply.BuildingBlocks.Logging;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddCustomSerilog();
+
 
 // 1. Add Services
 builder.Services.AddControllers();

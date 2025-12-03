@@ -1,7 +1,14 @@
 ﻿using CoreSupply.Quote.API.Repositories;
 using MassTransit; // اضافه شد
+using CoreSupply.BuildingBlocks.Logging;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddCustomSerilog();
+
+
 
 // --- Add services to the container ---
 

@@ -11,7 +11,7 @@ WORKDIR /src
 
 # کپی کردن فایل پروژه (با توجه به ساختار فلت)
 COPY ["CoreSupply.Identity.API/CoreSupply.Identity.API.csproj", "CoreSupply.Identity.API/"]
-
+COPY ["CoreSupply.BuildingBlocks/CoreSupply.BuildingBlocks.csproj", "CoreSupply.BuildingBlocks/"]
 # بازیابی پکیج‌ها
 RUN dotnet restore "./CoreSupply.Identity.API/CoreSupply.Identity.API.csproj"
 

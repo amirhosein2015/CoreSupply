@@ -2,8 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using CoreSupply.Ordering.API.EventBusConsumer;
+using CoreSupply.BuildingBlocks.Logging;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddCustomSerilog();
+
+
 
 // --- Add services to the container ---
 
