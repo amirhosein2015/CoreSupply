@@ -11,7 +11,6 @@
 **CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
 ![Microservice Diagram](https://github.com/user-attachments/assets/709b8dce-29a7-41bb-844b-85caeb50a1ec)
 
-
 ## 🏗️ High-Level Architecture
 
 The system follows the **Clean Architecture** principles within each microservice and orchestrates communication via a lightweight Event Bus.
@@ -62,6 +61,10 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Docker Compose:** Zero-config deployment of 15+ containers (Services + Databases + Broker + Monitoring).
 *   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
 
+### **4. System Resilience**
+*   **Fault Tolerance:** Implemented **Polly** retry policies for EF Core database connections (SQL Server & Postgres).
+*   **Performance Monitoring:** Custom `LoggingBehavior` in MediatR pipeline to track slow commands.
+
 ---
 
 ## 🧩 Microservices Breakdown
@@ -72,14 +75,14 @@ This project demonstrates mastery of advanced software engineering concepts requ
 | **Catalog API** | Product Inventory Management | .NET 8, Repository Pattern | **MongoDB** | 9001 |
 | **Quote API** | Basket & B2B Quote Management | .NET 8, **MassTransit Publisher** | **Redis** | 9002 |
 | **Ordering API** | Order Lifecycle (Core Domain) | .NET 8, **DDD**, **CQRS**, **Consumer** | **SQL Server** | 9004 |
-| **API Gateway** | Unified Routing & Security | Ocelot | - | 9000 |
+| **API Gateway** | Unified Routing & Security | Ocelot, **Polly** | - | 9000 |
 | **Seq** | **Centralized Log Dashboard** | Datalust Seq | - | 5340 |
 
 ### **Shared Kernel (BuildingBlocks)**
 A centralized class library that enforces standards across all microservices:
 *   **CQRS Abstractions:** `ICommand`, `IQuery`, `ICommandHandler`.
 *   **DDD Base Classes:** `Entity`, `AggregateRoot`, `IDomainEvent`.
-*   **Cross-Cutting Concerns:** `LoggingExtensions` (Serilog config), `ValidationBehavior`.
+*   **Cross-Cutting Concerns:** `LoggingExtensions` (Serilog config), `ValidationBehavior`, `LoggingBehavior`.
 
 ---
 
@@ -132,7 +135,7 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **Event Bus** (RabbitMQ + MassTransit implementation)
 *   [x] **API Gateway** (Ocelot Routing)
 *   [x] **Observability** (Seq & Serilog Structured Logging)
-*   [ ] **Resilience:** Polly policies (Retry, Circuit Breaker) for database reliability.
+*   [x] **Resilience** (Polly Retry Policies & Performance Logging)
 *   [ ] **Testing:** Integration tests using **Testcontainers**.
 *   [ ] **CI/CD:** GitHub Actions pipelines.
 
@@ -148,4 +151,3 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 ---
 *Designed with ❤️ for the Industrial Sector.*
 ```
-
