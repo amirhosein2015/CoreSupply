@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Behaviors\" />
     <Folder Include="Exceptions\" />
   </ItemGroup>
 

@@ -3,50 +3,68 @@ using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using CoreSupply.Ordering.API.EventBusConsumer;
 using CoreSupply.BuildingBlocks.Logging;
-
-
+using CoreSupply.BuildingBlocks.Behaviors; // برای پایپ‌لاین‌های MediatR
+using Polly; // برای Circuit Breaker
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- 1. Logging ---
 builder.AddCustomSerilog();
 
-
-
-// --- Add services to the container ---
-
-// 1. API Services
+// --- 2. API Services ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. Database Configuration (SQL Server)
+// --- 3. Database with Polly Retry (Resilience) ---
 builder.Services.AddDbContext<OrderContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("OrderingConnectionString")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("OrderingConnectionString"),
+        sqlOptions =>
+        {
+            // اگر دیتابیس قطع شد، تا 10 بار تلاش کن (هر بار با حداکثر 30 ثانیه تاخیر)
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 10,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        }
+    ));
 
-// 3. MediatR (CQRS)
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+// --- 4. MediatR with Pipelines (Validation & Logging) ---
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    // ثبت رفتارهای هوشمند (به ترتیب اجرا می‌شوند)
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+});
 
-// 4. MassTransit Configuration (RabbitMQ Consumer)
+// --- 5. MassTransit (RabbitMQ) ---
 builder.Services.AddMassTransit(config => {
-    // معرفی Consumer برای دریافت پیام‌ها
     config.AddConsumer<BasketCheckoutConsumer>();
 
     config.UsingRabbitMq((ctx, cfg) => {
         cfg.Host("amqp://guest:guest@core.eventbus:5672");
-
-        // تنظیم دقیق صف و بایندینگ
         cfg.ReceiveEndpoint("basket-checkout-queue", c => {
-            // این خط حیاتی است: میگوید این صف باید پیام‌های این نوع ایونت را بگیرد
             c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
         });
     });
-
 });
+
+// --- 6. HttpClient with Circuit Breaker (Polly) ---
+// اگر سرویس کاتالوگ قطع بود، بعد از 5 خطا، مدار را قطع کن
+builder.Services.AddHttpClient("CatalogClient", client =>
+{
+    client.BaseAddress = new Uri("http://catalog.api:8080");
+})
+.AddTransientHttpErrorPolicy(p =>
+    p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
 var app = builder.Build();
 
 // --- Pipeline ---
 
-// اعمال خودکار مایگریشن‌ها هنگام استارت برنامه
+// مایگریشن خودکار
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
