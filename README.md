@@ -3,6 +3,7 @@
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
+[![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
 [![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blue?style=flat-square)](https://github.com/amirhosein2015/CoreSupply)
 [![Quality](https://img.shields.io/badge/Tests-Integration_%26_Unit-green?style=flat-square)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
@@ -175,7 +176,7 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **Observability** (Seq & Serilog Structured Logging)
 *   [x] **Resilience** (Polly Retry Policies & Performance Logging)
 *   [x] **Testing** (Integration Tests Infrastructure)
-*   [ ] **CI/CD:** GitHub Actions pipelines.
+*   [x] **CI/CD:** GitHub Actions pipelines.
 *   [ ] **Security:** Implement HTTPS and Keycloak integration.
 
 ---
