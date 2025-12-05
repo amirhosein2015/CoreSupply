@@ -68,18 +68,17 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Resilient Connectivity:** Retry policies and circuit breakers (via MassTransit).
 
 ### **3. Observability & DevOps**
-*   **Centralized Logging:** Structured logging aggregation using **Serilog** and **Seq**.
-*   **Docker Compose:** Zero-config deployment of 15+ containers (Services + Databases + Broker + Monitoring).
-*   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
+*   **Centralized Logging:** Structured logging aggregation using **[Serilog configuration](./CoreSupply.BuildingBlocks/Logging/LoggingExtensions.cs)** and **Seq**.
+*   **Docker Compose:** Zero-config deployment via [docker-compose.yml](./docker-compose.yml).
 
-### **4. System Resilience (Polly)**
-*   **Fault Tolerance:** Implemented **Polly** retry policies for EF Core database connections (SQL Server & Postgres) to handle transient failures.
-*   **Circuit Breaker:** HTTP Client resilience policies to prevent cascading failures between services.
-*   **Performance Monitoring:** Custom `LoggingBehavior` in MediatR pipeline to track and log slow-running commands.
+### **4. System Resilience**
+*   **Fault Tolerance:** Implemented **Polly** retry policies inside [Ordering Program.cs](./CoreSupply.Ordering.API/Program.cs).
+*   **Performance Monitoring:** Custom **[LoggingBehavior.cs](./CoreSupply.BuildingBlocks/Behaviors/LoggingBehavior.cs)** in MediatR pipeline to track slow commands.
 
 ### **5. Quality Assurance**
-*   **Integration Testing:** Automated end-to-end testing using **xUnit** and **WebApplicationFactory**.
-*   **Test Infrastructure:** Configurable support for **Testcontainers** (Docker-based DBs) and **InMemory** databases for rapid feedback loops.
+*   **Integration Testing:** Automated end-to-end testing using **[Testcontainers implementation](./CoreSupply.IntegrationTests/Fixtures/IntegrationTestWebAppFactory.cs)**.
+*   **Unit/Integration Scenarios:** See **[OrderTests.cs](./CoreSupply.IntegrationTests/Fixtures/OrderTests.cs)** for real-world testing examples.
+.
 
 ---
 
@@ -155,6 +154,9 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 
 ---
 
+
+
+---
 ## 🔮 Roadmap (Principal Level Goals)
 
 *   [x] **Core Microservices** (Identity, Catalog, Basket, Ordering)
