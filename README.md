@@ -4,16 +4,22 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blue?style=flat-square)](https://github.com/amirhosein2015/CoreSupply)
+[![Quality](https://img.shields.io/badge/Tests-Integration_%26_Unit-green?style=flat-square)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 > **Enterprise-grade B2B solution for the DACH market, built with modern .NET 8 standards.**
 
-**CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
+**CoreSupply** is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
+
+The primary goal of this project is to demonstrate **Principal-level** engineering practices, including robust observability, resiliency patterns, and automated integration testing.
+
 ![Microservice Diagram](https://github.com/user-attachments/assets/709b8dce-29a7-41bb-844b-85caeb50a1ec)
+
+---
 
 ## 🏗️ High-Level Architecture
 
-The system follows the **Clean Architecture** principles within each microservice and orchestrates communication via a lightweight Event Bus.
+The system follows **Clean Architecture** principles and uses a lightweight Event Bus for asynchronous communication.
 
 ```mermaid
 graph TD
@@ -36,6 +42,11 @@ graph TD
         Ordering -.-> Seq[Seq Logging Server]
         Basket -.-> Seq
         Identity -.-> Seq
+        Gateway -.-> Seq
+    end
+    
+    subgraph "Quality Assurance"
+        Tests[Integration Tests] -.-> Ordering
     end
 ```
 
@@ -61,9 +72,14 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Docker Compose:** Zero-config deployment of 15+ containers (Services + Databases + Broker + Monitoring).
 *   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
 
-### **4. System Resilience**
-*   **Fault Tolerance:** Implemented **Polly** retry policies for EF Core database connections (SQL Server & Postgres).
-*   **Performance Monitoring:** Custom `LoggingBehavior` in MediatR pipeline to track slow commands.
+### **4. System Resilience (Polly)**
+*   **Fault Tolerance:** Implemented **Polly** retry policies for EF Core database connections (SQL Server & Postgres) to handle transient failures.
+*   **Circuit Breaker:** HTTP Client resilience policies to prevent cascading failures between services.
+*   **Performance Monitoring:** Custom `LoggingBehavior` in MediatR pipeline to track and log slow-running commands.
+
+### **5. Quality Assurance**
+*   **Integration Testing:** Automated end-to-end testing using **xUnit** and **WebApplicationFactory**.
+*   **Test Infrastructure:** Configurable support for **Testcontainers** (Docker-based DBs) and **InMemory** databases for rapid feedback loops.
 
 ---
 
@@ -71,7 +87,7 @@ This project demonstrates mastery of advanced software engineering concepts requ
 
 | Service | Responsibility | Tech Stack | Database | Port |
 | :--- | :--- | :--- | :--- | :--- |
-| **Identity API** | Centralized Authentication (JWT) | .NET 8, Identity Core | **PostgreSQL** | 9003 |
+| **Identity API** | Centralized Authentication (JWT) | .NET 8, Identity Core, **Polly** | **PostgreSQL** | 9003 |
 | **Catalog API** | Product Inventory Management | .NET 8, Repository Pattern | **MongoDB** | 9001 |
 | **Quote API** | Basket & B2B Quote Management | .NET 8, **MassTransit Publisher** | **Redis** | 9002 |
 | **Ordering API** | Order Lifecycle (Core Domain) | .NET 8, **DDD**, **CQRS**, **Consumer** | **SQL Server** | 9004 |
@@ -114,17 +130,28 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 
 ---
 
-## 🧪 Testing the Event-Driven Flow
+## 🧪 Testing Strategies
 
+CoreSupply employs multiple levels of testing to ensure reliability.
+
+### 1. Automated Integration Tests
+You can run the integration tests to verify the "Create Order" flow against an isolated database.
+
+```bash
+dotnet test CoreSupply.IntegrationTests/CoreSupply.IntegrationTests.csproj
+```
+*Result: Verifies that the API endpoint correctly processes the command and persists data to the database.*
+
+### 2. Manual End-to-End Event Flow
 To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering):
 
 1.  Open **Basket Swagger** (`localhost:9002`).
 2.  Create a basket using `POST /api/v1/Basket`.
 3.  Call `POST /api/v1/Basket/Checkout`.
-4.  **Verify via Observability (Recommended):**
+4.  **Verify via Observability (Seq):**
     *   Open **Seq Dashboard** (`http://localhost:5340`).
     *   Filter logs for `ApplicationName = "CoreSupply.Ordering.API"`.
-    *   ✅ Look for: `Order created successfully with Id: ...`
+    *   ✅ Look for success log: `Order created successfully with Id: ...`
 
 ---
 
@@ -136,8 +163,9 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **API Gateway** (Ocelot Routing)
 *   [x] **Observability** (Seq & Serilog Structured Logging)
 *   [x] **Resilience** (Polly Retry Policies & Performance Logging)
-*   [ ] **Testing:** Integration tests using **Testcontainers**.
+*   [x] **Testing** (Integration Tests Infrastructure)
 *   [ ] **CI/CD:** GitHub Actions pipelines.
+*   [ ] **Security:** Implement HTTPS and Keycloak integration.
 
 ---
 
