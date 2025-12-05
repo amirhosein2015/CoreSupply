@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
+using System.Runtime.InteropServices; // اضافه شد
 
 namespace CoreSupply.IntegrationTests.Fixtures
 {
@@ -13,16 +14,19 @@ namespace CoreSupply.IntegrationTests.Fixtures
     {
         private readonly MsSqlContainer _dbContainer;
 
-        // سازنده کلاس: اینجا آدرس داکر را ست می‌کنیم
         public IntegrationTestWebAppFactory()
         {
-            // 1. تنظیم آدرس داکر برای ویندوز (حل خطای Docker not found)
-            Environment.SetEnvironmentVariable("DOCKER_HOST", "npipe://./pipe/docker_engine");
+            // فقط اگر روی ویندوز هستیم، این تنظیم را اعمال کن
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Environment.SetEnvironmentVariable("DOCKER_HOST", "npipe://./pipe/docker_engine");
+            }
 
-            // 2. ساخت کانتینر با استراتژی انتظار هوشمند
+            // ساخت کانتینر (مشترک برای همه سیستم‌عامل‌ها)
             _dbContainer = new MsSqlBuilder()
                 .WithImage("mcr.microsoft.com/mssql/server:2019-latest")
                 .WithPassword("Password12!")
+                // استراتژی انتظار ساده‌تر برای لینوکس (چون سریع‌تر است)
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(".*Recovery is complete.*"))
                 .Build();
         }
@@ -55,4 +59,3 @@ namespace CoreSupply.IntegrationTests.Fixtures
         }
     }
 }
-
