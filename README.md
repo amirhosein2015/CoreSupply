@@ -154,6 +154,15 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 
 ---
 
+## 📸 Visual Evidence
+
+### Observability Dashboard (Seq)
+*Real-time structured logging from all microservices.*
+![Seq Dashboard](./assets/seq-dashboard.png)
+
+### Automated Tests Results
+*Successful execution of integration tests.*
+![Test Results](./assets/test-pass.png)
 
 
 ---
