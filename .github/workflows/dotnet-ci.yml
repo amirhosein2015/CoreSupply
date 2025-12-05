@@ -1,0 +1,35 @@
+name: .NET 8 CI Pipeline
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. دریافت کد از مخزن
+    - uses: actions/checkout@v4
+
+    # 2. نصب دات‌نت 8
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    # 3. بازیابی پکیج‌ها (Restore)
+    - name: Restore dependencies
+      run: dotnet restore CoreSupply.sln
+
+    # 4. بیلد کردن کل پروژه (Build)
+    - name: Build
+      run: dotnet build CoreSupply.sln --no-restore --configuration Release
+
+    # 5. اجرای تست‌ها (Test)
+    # نکته: چون در گیت‌هاب داکر داریم، تست‌ها باید بتوانند کانتینر بسازند.
+    # ما از متغیر محیطی استفاده می‌کنیم تا تست بفهمد در محیط CI است.
+    - name: Test
+      run: dotnet test CoreSupply.IntegrationTests/CoreSupply.IntegrationTests.csproj --no-build --verbosity normal
