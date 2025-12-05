@@ -90,3 +90,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+// این خط باعث می‌شود کلاس Program عمومی شود و تست‌ها بتوانند آن را ببینند
+public partial class Program { }
