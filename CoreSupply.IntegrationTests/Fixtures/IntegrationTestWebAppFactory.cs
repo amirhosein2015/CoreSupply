@@ -17,15 +17,15 @@ namespace CoreSupply.IntegrationTests.Fixtures
 
         public IntegrationTestWebAppFactory()
         {
-            // اگر در محیط CI (گیت‌هاب) هستیم، از Testcontainers استفاده نکن!
-            // (متغیر CI به طور خودکار توسط GitHub Actions مقداردهی می‌شود)
-            var isCiEnvironment = Environment.GetEnvironmentVariable("CI") == "true";
+            // تشخیص محیط CI گیت‌هاب
+            var isCi = Environment.GetEnvironmentVariable("CI") == "true"
+                    || Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
 
-            _useTestContainers = !isCiEnvironment; // فقط در لوکال استفاده کن
+            _useTestContainers = !isCi;
 
             if (_useTestContainers)
             {
-                // تنظیمات ویندوز لوکال
+                // تنظیمات ویندوز
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     Environment.SetEnvironmentVariable("DOCKER_HOST", "npipe:////./pipe/docker_engine");
@@ -52,13 +52,12 @@ namespace CoreSupply.IntegrationTests.Fixtures
                 {
                     if (_useTestContainers && _dbContainer != null)
                     {
-                        // استراتژی حرفه‌ای (لوکال)
                         var connectionString = _dbContainer.GetConnectionString() + ";Connect Timeout=60";
                         options.UseSqlServer(connectionString);
                     }
                     else
                     {
-                        // استراتژی سریع و امن (CI/CD)
+                        // استفاده از InMemory برای گیت‌هاب
                         options.UseInMemoryDatabase("IntegrationTestDb");
                     }
                 });

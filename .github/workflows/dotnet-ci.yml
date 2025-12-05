@@ -32,4 +32,5 @@ jobs:
     # نکته: چون در گیت‌هاب داکر داریم، تست‌ها باید بتوانند کانتینر بسازند.
     # ما از متغیر محیطی استفاده می‌کنیم تا تست بفهمد در محیط CI است.
     - name: Test
-      run: dotnet test CoreSupply.IntegrationTests/CoreSupply.IntegrationTests.csproj --no-build --verbosity normal
+      run: dotnet test CoreSupply.IntegrationTests/CoreSupply.IntegrationTests.csproj --no-build --verbosity normal --logger "console;verbosity=detailed"
+
