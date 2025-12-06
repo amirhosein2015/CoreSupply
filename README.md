@@ -89,7 +89,8 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Deep Dive:** 👉 **[Read the full Testing Strategy Guide](./docs/architecture/testing-strategy.md)** to understand how we handle CI/CD vs Local environments.
 
 ### **6. Security Architecture**
-*   **Identity Management:** Centralized JWT authentication with Refresh Token Rotation.
+*   **Identity & Access:** Centralized JWT authentication with Refresh Token Rotation and RBAC authorization.
+*   **Secrets Management:** Environment-based configuration following 12-Factor App principles (no hardcoded secrets).
 *   **Deep Dive:** 👉 **[Read the Security Architecture Guide](./docs/architecture/security-architecture.md)**.
 
 ---
@@ -189,7 +190,7 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **Testing** (Integration Tests Infrastructure)
 *   [x] **CI/CD:** GitHub Actions pipelines.
 *   [x] **Security:** Secure Refresh Token Flow implemented.
-*   [ ] **Advanced Security:** RBAC (Role-Based Access Control) & Secrets Management.
+*   [x] **Advanced Security:** RBAC (Role-Based Access Control) & Secrets Management.
 
 ---
 
