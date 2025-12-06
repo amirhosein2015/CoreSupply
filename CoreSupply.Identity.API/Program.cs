@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CoreSupply.BuildingBlocks.Logging;
+using CoreSupply.Identity.API.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,17 +31,19 @@ builder.Services.AddDbContext<IdentityContext>(options =>
         }));
 
 // --- 4. Identity Configuration ---
-builder.Services.AddIdentityCore<IdentityUser>(options =>
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8; 
+    options.User.RequireUniqueEmail = true;
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<IdentityContext>()
-.AddSignInManager<SignInManager<IdentityUser>>()
-.AddUserManager<UserManager<IdentityUser>>()
+.AddSignInManager<SignInManager<ApplicationUser>>() 
+.AddUserManager<UserManager<ApplicationUser>>()     
 .AddDefaultTokenProviders();
+
 
 // --- 5. Authentication (JWT) ---
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -62,7 +66,8 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
         ValidateAudience = true,
         ValidAudience = jwtSettings.GetValue<string>("Audience"),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        ValidateLifetime = true // حتما تاریخ انقضا چک شود
     };
 });
 

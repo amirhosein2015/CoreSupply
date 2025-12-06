@@ -1,7 +1,7 @@
 ﻿version: '3.4'
 
 services:
-  # --- INFRASTRUCTURE (SAFE PORTS: 6000+) ---
+  # --- INFRASTRUCTURE (SAFE PORTS: 6000-7000) ---
 
   catalogdb:
     image: mongo:6.0
@@ -23,7 +23,7 @@ services:
     image: redis:7.0-alpine
     container_name: core.redis
     ports:
-      - "6379:6379"
+      - "7379:6379"
     networks:
       - coresupply_network
     healthcheck:
@@ -32,7 +32,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # --- NEW: SEQ LOGGING SERVER ---
+  # --- LOGGING ---
   seq:
     image: datalust/seq:latest
     container_name: core.seq
@@ -41,12 +41,9 @@ services:
       - "5341:5341"
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD_HASH=phArgon2$v=19$m=65536,t=3,p=4$U2VxQWRtaW4xMjM0NQ$X/L7/q/X/L7/q/X/L7/q/X/L7/q/X/L7/q/X/L7/q/X
-      # یا روش ساده‌تر (برای محیط توسعه):
       - SEQ_FIRSTRUN_ADMINPASSWORD=Password12!
     networks:
       - coresupply_network
-
 
   quotedb:
     image: mongo:6.0
@@ -66,7 +63,7 @@ services:
     image: postgres
     container_name: core.pricingdb
     ports:
-      - "6432:5432" # Safe Port
+      - "7432:5432" # Corrected Port (with quotes)
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=Password12!
@@ -90,7 +87,7 @@ services:
       - POSTGRES_PASSWORD=Password12!
       - POSTGRES_DB=identitydb
     ports:
-      - "6433:5432" # Safe Port
+      - "7433:5432" # Corrected Port
     volumes:
       - coresupply-identity-data:/var/lib/postgresql/data
     networks:
@@ -127,7 +124,7 @@ services:
     networks:
       - coresupply_network
 
-  # --- CORE SERVICES (FINAL SAFE PORTS: 9000+) ---
+  # --- CORE SERVICES (9000+) ---
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi

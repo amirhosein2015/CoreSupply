@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using CoreSupply.Identity.API.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
+
+
 namespace CoreSupply.Identity.API.Data
 {
-    // این کلاس مسئول مدیریت جداول کاربران در دیتابیس است
-    public class IdentityContext : IdentityDbContext<IdentityUser>
+   
+
+    public class IdentityContext : IdentityDbContext<ApplicationUser>
     {
         public IdentityContext(DbContextOptions<IdentityContext> options) : base(options)
         {
