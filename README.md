@@ -14,7 +14,7 @@
 
 The primary goal of this project is to demonstrate **Principal-level** engineering practices, including robust observability, resiliency patterns, and automated integration testing.
 
-![Microservice Diagram](https://github.com/user-attachments/assets/709b8dce-29a7-41bb-844b-85caeb50a1ec)
+![Microservice Diagram](https://github.com/user-attachments/assets/77fc23ec-1806-4fd9-bb76-f8b93d1b0e78)
 
 ---
 
