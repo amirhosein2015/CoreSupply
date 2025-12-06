@@ -41,7 +41,7 @@ services:
       - "5341:5341"
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD=Password12!
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${DB_PASSWORD} # استفاده از متغیر محیطی
     networks:
       - coresupply_network
 
@@ -63,10 +63,10 @@ services:
     image: postgres
     container_name: core.pricingdb
     ports:
-      - "7432:5432" # Corrected Port (with quotes)
+      - "7432:5432"
     environment:
       - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=Password12!
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=pricing
     volumes:
       - coresupply-pricing-data:/var/lib/postgresql/data
@@ -84,10 +84,10 @@ services:
     container_name: core.identitydb
     environment:
       - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=Password12!
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=identitydb
     ports:
-      - "7433:5432" # Corrected Port
+      - "7433:5432"
     volumes:
       - coresupply-identity-data:/var/lib/postgresql/data
     networks:
@@ -97,19 +97,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   procurementdb:
     image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: core.procurementdb
     environment:
-      - SA_PASSWORD=Password12!
+      - SA_PASSWORD=${DB_PASSWORD}
       - ACCEPT_EULA=Y
     ports:
       - "1433:1433"
     networks:
       - coresupply_network
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password12!", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${DB_PASSWORD}", "-Q", "SELECT 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -136,7 +137,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - DatabaseSettings__ConnectionString=mongodb://core.catalogdb:27017
+      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION} # استفاده از متغیر
     depends_on:
       catalogdb:
         condition: service_healthy
@@ -153,8 +154,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - DatabaseSettings__ConnectionString=mongodb://core.quotedb:27017
-      - CacheSettings__ConnectionString=core.redis:6379
+      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION}
+      - CacheSettings__ConnectionString=${REDIS_CONNECTION}
     depends_on:
       quotedb:
         condition: service_healthy
@@ -173,10 +174,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - DatabaseSettings__ConnectionString=Host=core.identitydb;Port=5432;Database=identitydb;Username=admin;Password=Password12!;
-      - JwtSettings__Secret=ThisIsTheSecureKeyForCoreSupplyProject2025!
-      - JwtSettings__Issuer=CoreSupplyIdentity
-      - JwtSettings__Audience=CoreSupplyClients
+      # کانکشن استرینگ پویا
+      - DatabaseSettings__ConnectionString=Host=core.identitydb;Port=5432;Database=identitydb;Username=admin;Password=${DB_PASSWORD};
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
     depends_on:
       identitydb:
         condition: service_healthy
@@ -193,7 +195,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__OrderingConnectionString=Server=core.procurementdb,1433;Database=OrderingDb;User Id=sa;Password=Password12!;TrustServerCertificate=True;
+      # کانکشن استرینگ پویا
+      - ConnectionStrings__OrderingConnectionString=Server=core.procurementdb,1433;Database=OrderingDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
     depends_on:
       procurementdb:
         condition: service_started
