@@ -1,25 +1,4 @@
-ایده فوق‌العاده‌ای است! 🧠
-یکی از نشانه‌های بارز یک **Staff/Principal Engineer** این است که برای هر بخش پیچیده، یک مستند عمیق و جداگانه (Deep Dive) دارد و `README` اصلی فقط نقش فهرست (Index) را بازی می‌کند.
 
-این کار باعث می‌شود پروژه شما مثل یک **کتاب مرجع** به نظر برسد.
-
-### 🗺️ استراتژی مستندسازی (Documentation Strategy)
-
-ما باید برای این ۴ بخش کلیدی، فایل‌های جداگانه در پوشه `/docs` بسازیم:
-1.  **Testing Strategy** (تست‌های یکپارچه و Testcontainers).
-2.  **Resilience Patterns** (پالی و مدیریت خطا).
-3.  **Observability Guide** (لاگینگ با Seq و Serilog).
-4.  **Security Architecture** (رفرش توکن و Identity).
-
----
-
-### 📝 گام ۱: ساخت فایل مستندات تست (`testing-strategy.md`)
-
-در پوشه `docs` (اگر ندارید بسازید)، یک پوشه `architecture` یا `guides` بسازید و فایل **`docs/guides/testing-strategy.md`** را ایجاد کنید.
-
-محتوای فوق‌العاده حرفه‌ای زیر را در آن قرار دهید:
-
-```markdown
 # 🧪 CoreSupply Testing Strategy
 
 > A comprehensive guide to automated testing patterns used in CoreSupply to ensure reliability and prevent regressions.
@@ -101,4 +80,3 @@ dotnet test
 Tests are automatically triggered on every `push` to `main`. You can view the results in the **Actions** tab.
 ```
 
----
