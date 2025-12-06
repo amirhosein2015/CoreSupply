@@ -71,15 +71,26 @@ This project demonstrates mastery of advanced software engineering concepts requ
 ### **3. Observability & DevOps**
 *   **Centralized Logging:** Structured logging aggregation using **[Serilog configuration](./CoreSupply.BuildingBlocks/Logging/LoggingExtensions.cs)** and **Seq**.
 *   **Docker Compose:** Zero-config deployment via [docker-compose.yml](./docker-compose.yml).
-*   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
+*   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra). 
+*   **Centralized Logging:** Structured logging aggregation using Serilog and Seq.
+*   **Deep Dive:** 👉 **[Read the Observability Guide](./docs/observability/observability-guide.md)**.
+
 
 ### **4. System Resilience**
 *   **Fault Tolerance:** Implemented **Polly** retry policies inside [Ordering Program.cs](./CoreSupply.Ordering.API/Program.cs).
 *   **Performance Monitoring:** Custom **[LoggingBehavior.cs](./CoreSupply.BuildingBlocks/Behaviors/LoggingBehavior.cs)** in MediatR pipeline to track slow commands.
+*   **Fault Tolerance:** Implemented **Polly** retry policies for database connections.
+*   **Deep Dive:** 👉 **[Read the Resilience & Fault Tolerance Guide](./docs/architecture/resilience-patterns.md)**.
 
 ### **5. Quality Assurance**
 *   **Integration Testing:** Automated end-to-end testing using **[Testcontainers implementation](./CoreSupply.IntegrationTests/Fixtures/IntegrationTestWebAppFactory.cs)**.
 *   **Unit/Integration Scenarios:** See **[OrderTests.cs](./CoreSupply.IntegrationTests/Fixtures/OrderTests.cs)** for real-world testing examples.
+*   **Integration Testing:** Automated end-to-end testing using a hybrid strategy (Testcontainers + InMemory).
+*   **Deep Dive:** 👉 **[Read the full Testing Strategy Guide](./docs/architecture/testing-strategy.md)** to understand how we handle CI/CD vs Local environments.
+
+### **6. Security Architecture**
+*   **Identity Management:** Centralized JWT authentication with Refresh Token Rotation.
+*   **Deep Dive:** 👉 **[Read the Security Architecture Guide](./docs/architecture/security-architecture.md)**.
 
 ---
 
