@@ -10,7 +10,7 @@
 
 > **Enterprise-grade B2B solution for the DACH market, built with modern .NET 8 standards.**
 
-**CoreSupply** is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
+**CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
 
 The primary goal of this project is to demonstrate **Principal-level** engineering practices, including robust observability, resiliency patterns, and automated integration testing.
 
@@ -71,6 +71,7 @@ This project demonstrates mastery of advanced software engineering concepts requ
 ### **3. Observability & DevOps**
 *   **Centralized Logging:** Structured logging aggregation using **[Serilog configuration](./CoreSupply.BuildingBlocks/Logging/LoggingExtensions.cs)** and **Seq**.
 *   **Docker Compose:** Zero-config deployment via [docker-compose.yml](./docker-compose.yml).
+*   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra).
 
 ### **4. System Resilience**
 *   **Fault Tolerance:** Implemented **Polly** retry policies inside [Ordering Program.cs](./CoreSupply.Ordering.API/Program.cs).
@@ -79,7 +80,6 @@ This project demonstrates mastery of advanced software engineering concepts requ
 ### **5. Quality Assurance**
 *   **Integration Testing:** Automated end-to-end testing using **[Testcontainers implementation](./CoreSupply.IntegrationTests/Fixtures/IntegrationTestWebAppFactory.cs)**.
 *   **Unit/Integration Scenarios:** See **[OrderTests.cs](./CoreSupply.IntegrationTests/Fixtures/OrderTests.cs)** for real-world testing examples.
-.
 
 ---
 
@@ -87,7 +87,7 @@ This project demonstrates mastery of advanced software engineering concepts requ
 
 | Service | Responsibility | Tech Stack | Database | Port |
 | :--- | :--- | :--- | :--- | :--- |
-| **Identity API** | Centralized Authentication (JWT) | .NET 8, Identity Core, **Polly** | **PostgreSQL** | 9003 |
+| **Identity API** | Centralized Authentication (**JWT + Refresh Token**) | .NET 8, Identity Core, **Polly** | **PostgreSQL** | 9003 |
 | **Catalog API** | Product Inventory Management | .NET 8, Repository Pattern | **MongoDB** | 9001 |
 | **Quote API** | Basket & B2B Quote Management | .NET 8, **MassTransit Publisher** | **Redis** | 9002 |
 | **Ordering API** | Order Lifecycle (Core Domain) | .NET 8, **DDD**, **CQRS**, **Consumer** | **SQL Server** | 9004 |
@@ -165,8 +165,8 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *Successful execution of integration tests.*
 ![Test Results](./assets/test-pass.png)
 
-
 ---
+
 ## 🔮 Roadmap (Principal Level Goals)
 
 *   [x] **Core Microservices** (Identity, Catalog, Basket, Ordering)
@@ -177,7 +177,8 @@ To verify the asynchronous **Checkout Process** (Basket -> RabbitMQ -> Ordering)
 *   [x] **Resilience** (Polly Retry Policies & Performance Logging)
 *   [x] **Testing** (Integration Tests Infrastructure)
 *   [x] **CI/CD:** GitHub Actions pipelines.
-*   [ ] **Security:** Implement HTTPS and Keycloak integration.
+*   [x] **Security:** Secure Refresh Token Flow implemented.
+*   [ ] **Advanced Security:** RBAC (Role-Based Access Control) & Secrets Management.
 
 ---
 
