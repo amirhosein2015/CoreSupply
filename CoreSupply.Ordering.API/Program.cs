@@ -3,8 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using CoreSupply.Ordering.API.EventBusConsumer;
 using CoreSupply.BuildingBlocks.Logging;
-using CoreSupply.BuildingBlocks.Behaviors; // برای پایپ‌لاین‌های MediatR
-using Polly; // برای Circuit Breaker
+using CoreSupply.BuildingBlocks.Behaviors;
+using Polly;
+using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens; // اضافه شد
+using System.Text; // اضافه شد
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,15 +17,47 @@ builder.AddCustomSerilog();
 // --- 2. API Services ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// --- 3. Database with Polly Retry (Resilience) ---
+// --- تنظیمات Swagger با دکمه قفل (Authorize) ---
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering API", Version = "v1" });
+
+    // تعریف سیستم احراز هویت JWT
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+});
+
+// --- 3. Database with Polly Retry ---
 builder.Services.AddDbContext<OrderContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("OrderingConnectionString"),
         sqlOptions =>
         {
-            // اگر دیتابیس قطع شد، تا 10 بار تلاش کن (هر بار با حداکثر 30 ثانیه تاخیر)
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 10,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -30,19 +65,17 @@ builder.Services.AddDbContext<OrderContext>(options =>
         }
     ));
 
-// --- 4. MediatR with Pipelines (Validation & Logging) ---
+// --- 4. MediatR ---
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    // ثبت رفتارهای هوشمند (به ترتیب اجرا می‌شوند)
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
 });
 
-// --- 5. MassTransit (RabbitMQ) ---
+// --- 5. MassTransit ---
 builder.Services.AddMassTransit(config => {
     config.AddConsumer<BasketCheckoutConsumer>();
-
     config.UsingRabbitMq((ctx, cfg) => {
         cfg.Host("amqp://guest:guest@core.eventbus:5672");
         cfg.ReceiveEndpoint("basket-checkout-queue", c => {
@@ -51,8 +84,7 @@ builder.Services.AddMassTransit(config => {
     });
 });
 
-// --- 6. HttpClient with Circuit Breaker (Polly) ---
-// اگر سرویس کاتالوگ قطع بود، بعد از 5 خطا، مدار را قطع کن
+// --- 6. HttpClient ---
 builder.Services.AddHttpClient("CatalogClient", client =>
 {
     client.BaseAddress = new Uri("http://catalog.api:8080");
@@ -60,11 +92,30 @@ builder.Services.AddHttpClient("CatalogClient", client =>
 .AddTransientHttpErrorPolicy(p =>
     p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
+// --- 7. Authentication (اصلاح شده) ---
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.GetValue<string>("Audience"),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
 var app = builder.Build();
 
 // --- Pipeline ---
 
-// مایگریشن خودکار
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -86,9 +137,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication(); // حتما قبل از Authorization
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
-// این خط باعث می‌شود کلاس Program عمومی شود و تست‌ها بتوانند آن را ببینند
+
 public partial class Program { }

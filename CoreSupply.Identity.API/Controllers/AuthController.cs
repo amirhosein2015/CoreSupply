@@ -13,12 +13,17 @@ namespace CoreSupply.Identity.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager; // تغییر به ApplicationUser
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager; // اضافه شد
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager, // اضافه شد
+            IConfiguration configuration)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
@@ -35,10 +40,20 @@ namespace CoreSupply.Identity.API.Controllers
                 SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = model.Email
             };
-            
+
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+            // --- اضافه کردن نقش پیش‌فرض ---
+            // اطمینان از وجود نقش‌ها در دیتابیس
+            if (!await _roleManager.RoleExistsAsync("User"))
+                await _roleManager.CreateAsync(new IdentityRole("User"));
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+
+            // تخصیص نقش User به کاربر جدید
+            await _userManager.AddToRoleAsync(user, "User");
 
             return Ok(new { Status = "Success", Message = "User created successfully!" });
         }
@@ -49,12 +64,13 @@ namespace CoreSupply.Identity.API.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var token = GenerateAccessToken(user);
+                // تولید توکن (حالا شامل نقش‌هاست)
+                var token = await GenerateAccessToken(user);
                 var refreshToken = GenerateRefreshToken();
 
-                // ذخیره رفرش توکن در دیتابیس
+                // ذخیره رفرش توکن
                 user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // اعتبار 7 روزه
+                user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 await _userManager.UpdateAsync(user);
 
                 return Ok(new
@@ -86,7 +102,8 @@ namespace CoreSupply.Identity.API.Controllers
                 return BadRequest("Invalid access token or refresh token");
             }
 
-            var newAccessToken = GenerateAccessToken(user);
+            // تولید توکن جدید (همراه با نقش)
+            var newAccessToken = await GenerateAccessToken(user);
             var newRefreshToken = GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
@@ -113,20 +130,28 @@ namespace CoreSupply.Identity.API.Controllers
 
         // --- Helper Methods ---
 
-        private JwtSecurityToken GenerateAccessToken(ApplicationUser user)
+        private async Task<JwtSecurityToken> GenerateAccessToken(ApplicationUser user)
         {
+            var userRoles = await _userManager.GetRolesAsync(user);
+
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
+            // اضافه کردن تمام نقش‌ها به عنوان Claim
+            foreach (var role in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"],
                 audience: _configuration["JwtSettings:Audience"],
-                expires: DateTime.UtcNow.AddMinutes(15), // عمر کوتاه برای اکسس توکن
+                expires: DateTime.UtcNow.AddMinutes(15),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
@@ -150,12 +175,12 @@ namespace CoreSupply.Identity.API.Controllers
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!)),
-                ValidateLifetime = false // اینجا مهم است: ما می‌خواهیم توکن منقضی شده را بخوانیم
+                ValidateLifetime = false
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-            
+
             if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
 
@@ -163,7 +188,6 @@ namespace CoreSupply.Identity.API.Controllers
         }
     }
 
-    // مدل ورودی برای رفرش کردن
     public class TokenModel
     {
         public string? AccessToken { get; set; }

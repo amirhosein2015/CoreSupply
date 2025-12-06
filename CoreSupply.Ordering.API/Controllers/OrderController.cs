@@ -1,6 +1,7 @@
 ﻿using CoreSupply.Ordering.API.Application.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoreSupply.Ordering.API.Controllers
 {
@@ -22,5 +23,15 @@ namespace CoreSupply.Ordering.API.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+
+
+        [HttpGet("admin/all-orders")]
+        [Authorize(Roles = "Admin")] // <--- فقط ادمین
+        public IActionResult GetAllOrders()
+        {
+            return Ok("This is a secured endpoint for Admins only!");
+        }
+
+
     }
 }
