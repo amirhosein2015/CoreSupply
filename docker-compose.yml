@@ -41,7 +41,7 @@ services:
       - "5341:5341"
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD=${DB_PASSWORD} # استفاده از متغیر محیطی
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${DB_PASSWORD}
     networks:
       - coresupply_network
 
@@ -125,7 +125,7 @@ services:
     networks:
       - coresupply_network
 
-  # --- CORE SERVICES (9000+) ---
+  # --- CORE SERVICES ---
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
@@ -137,10 +137,24 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION} # استفاده از متغیر
+      - DatabaseSettings__ConnectionString=mongodb://core.catalogdb:27017
     depends_on:
       catalogdb:
         condition: service_healthy
+    networks:
+      - coresupply_network
+
+  discount.grpc:
+    image: ${DOCKER_REGISTRY-}discountgrpc
+    build:
+      context: .
+      dockerfile: CoreSupply.Discount.Grpc/Dockerfile
+    ports:
+      - "9005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DatabaseSettings__ConnectionString=Data Source=DiscountDb.db
     networks:
       - coresupply_network
 
@@ -154,8 +168,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8081
-      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION}
-      - CacheSettings__ConnectionString=${REDIS_CONNECTION}
+      - DatabaseSettings__ConnectionString=mongodb://core.quotedb:27017
+      - CacheSettings__ConnectionString=core.redis:6379
     depends_on:
       quotedb:
         condition: service_healthy
@@ -174,7 +188,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      # کانکشن استرینگ پویا
       - DatabaseSettings__ConnectionString=Host=core.identitydb;Port=5432;Database=identitydb;Username=admin;Password=${DB_PASSWORD};
       - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=${JWT_ISSUER}
@@ -195,7 +208,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      # کانکشن استرینگ پویا
       - ConnectionStrings__OrderingConnectionString=Server=core.procurementdb,1433;Database=OrderingDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
       - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=${JWT_ISSUER}
@@ -221,6 +233,8 @@ services:
       ordering.api:
         condition: service_started
       identity.api:
+        condition: service_started
+      discount.grpc:
         condition: service_started
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

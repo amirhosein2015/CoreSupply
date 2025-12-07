@@ -1,7 +1,9 @@
 ﻿using CoreSupply.Quote.API.Repositories;
 using MassTransit; // اضافه شد
 using CoreSupply.BuildingBlocks.Logging;
-
+using CoreSupply.Quote.API.Services;
+using CoreSupply.Discount.Grpc.Protos;
+using CoreSupply.Quote.API.Services;
 
 
 
@@ -28,6 +30,17 @@ builder.Services.AddMassTransit(config => {
         cfg.Host("amqp://guest:guest@core.eventbus:5672");
     });
 });
+
+// تنظیم آدرس سرویس gRPC (نام کانتینر + پورت 8080)
+builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(o =>
+    o.Address = new Uri("http://discount.grpc:8080"));
+
+builder.Services.AddScoped<DiscountGrpcService>();
+
+
+
+
+
 
 // 4. API Services
 builder.Services.AddControllers();
