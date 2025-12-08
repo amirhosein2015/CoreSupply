@@ -1,28 +1,22 @@
 ﻿using CoreSupply.Discount.Grpc.Protos;
 
-namespace CoreSupply.Quote.API.Services
+namespace CoreSupply.Quote.API.Services;
+
+public class DiscountGrpcService
 {
-    public class DiscountGrpcService
+    private readonly DiscountProtoService.DiscountProtoServiceClient _discountProtoService;
+
+    public DiscountGrpcService(DiscountProtoService.DiscountProtoServiceClient discountProtoService)
     {
-        private readonly DiscountProtoService.DiscountProtoServiceClient _discountProtoService;
+        _discountProtoService = discountProtoService ?? throw new ArgumentNullException(nameof(discountProtoService));
+    }
 
-        public DiscountGrpcService(DiscountProtoService.DiscountProtoServiceClient discountProtoService)
-        {
-            _discountProtoService = discountProtoService;
-        }
+    public async Task<CouponModel> GetDiscount(string productName)
+    {
+        // ساخت درخواست برای ارسال به سرور
+        var discountRequest = new GetDiscountRequest { ProductName = productName };
 
-        public async Task<CouponModel> GetDiscount(string productName)
-        {
-            try
-            {
-                var discountRequest = new GetDiscountRequest { ProductName = productName };
-                return await _discountProtoService.GetDiscountAsync(discountRequest);
-            }
-            catch
-            {
-                // اگر تخفیف پیدا نشد یا ارور داد، صفر برگردان (Fail-Safe)
-                return new CouponModel { ProductName = "No Discount", Amount = 0, Description = "No Discount Desc" };
-            }
-        }
+        // فراخوانی متد gRPC
+        return await _discountProtoService.GetDiscountAsync(discountRequest);
     }
 }

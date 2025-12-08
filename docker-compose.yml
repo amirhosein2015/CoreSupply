@@ -2,7 +2,6 @@
 
 services:
   # --- INFRASTRUCTURE (SAFE PORTS: 6000-7000) ---
-
   catalogdb:
     image: mongo:6.0
     container_name: core.catalogdb
@@ -155,6 +154,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - DatabaseSettings__ConnectionString=Data Source=DiscountDb.db
+      # [CRITICAL FIX]: Force HTTP/2 protocol for gRPC compatibility
+      - Kestrel__EndpointDefaults__Protocols=Http2
     networks:
       - coresupply_network
 
@@ -170,11 +171,16 @@ services:
       - ASPNETCORE_URLS=http://+:8081
       - DatabaseSettings__ConnectionString=mongodb://core.quotedb:27017
       - CacheSettings__ConnectionString=core.redis:6379
+      # [CRITICAL FIX]: Address of the gRPC service
+      - GrpcSettings__DiscountUrl=http://discount.grpc:8080
     depends_on:
       quotedb:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # [CRITICAL FIX]: Wait for Discount service
+      discount.grpc:
+        condition: service_started
     networks:
       - coresupply_network
 
