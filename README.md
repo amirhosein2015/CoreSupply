@@ -1,12 +1,24 @@
 
 # 🏭 CoreSupply | Cloud-Native Industrial Supply Chain Platform
 
-[![.NET](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+<!-- Tech Stack & Version -->
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
-[![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
-[![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blue?style=flat-square)](https://github.com/amirhosein2015/CoreSupply)
-[![Quality](https://img.shields.io/badge/Tests-Integration_%26_Unit-green?style=flat-square)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+<!-- Architecture Patterns (The "Principal" stuff) -->
+[![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blueviolet?style=flat-square&logo=microservices)](https://github.com/amirhosein2015/CoreSupply)
+[![Pattern](https://img.shields.io/badge/Pattern-Saga_Orchestration-ff69b4?style=flat-square)](https://masstransit.io/documentation/patterns/saga)
+[![Pattern](https://img.shields.io/badge/Design-DDD_%26_CQRS-blue?style=flat-square)](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/)
+
+<!-- Critical Communication Infra -->
+[![Messaging](https://img.shields.io/badge/Messaging-MassTransit_%2B_RabbitMQ-orange?style=flat-square&logo=rabbitmq)](https://masstransit.io/)
+[![Protocol](https://img.shields.io/badge/Protocol-gRPC_(HTTP%2F2)-333333?style=flat-square&logo=grpc)](https://grpc.io/)
+
+<!-- Quality & DevOps -->
+[![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
+[![Tests](https://img.shields.io/badge/Tests-Integration_%26_Unit-success?style=flat-square&logo=testcafe)](https://xunit.net/)
+
 
 > **Enterprise-grade B2B solution for the DACH market, built with modern .NET 8 standards.**
 
@@ -39,6 +51,8 @@ graph TD
         %% Asynchronous Communication
         Basket -- Publishes Checkout Event --> EventBus[RabbitMQ / MassTransit]
         EventBus -- Consumes Event --> Ordering
+        Ordering -- Orchestrates --> Inventory[Inventory gRPC]
+        Ordering -- Orchestrates --> Payment[Payment API]
         
         %% Data Stores
         Identity --> AuthDB[(PostgreSQL)]
@@ -73,9 +87,9 @@ This project demonstrates mastery of advanced software engineering concepts requ
 
 ### **2. Communication & Messaging**
 *   **Event-Driven Architecture:** Asynchronous inter-service communication using **RabbitMQ** and **MassTransit**.
+*   **Saga Orchestration:** Distributed Transaction Management (Order -> Inventory -> Payment) using **MassTransit State Machine**.
 *   **Synchronous gRPC:** High-performance inter-service communication between *Basket* and *Discount* using ProtoBuf and HTTP/2.
 *   **API Gateway:** Unified entry point using **Ocelot** for routing and aggregation.
-*   **Resilient Connectivity:** Retry policies and circuit breakers (via MassTransit & Polly).
 
 ### **3. Observability & DevOps**
 *   **Centralized Logging:** Structured logging aggregation using **[Serilog configuration](./CoreSupply.BuildingBlocks/Logging/LoggingExtensions.cs)** and **Seq**.
@@ -85,7 +99,7 @@ This project demonstrates mastery of advanced software engineering concepts requ
 
 ### **4. System Resilience**
 *   **Fault Tolerance:** Implemented **Polly** retry policies inside [Ordering Program.cs](./CoreSupply.Ordering.API/Program.cs).
-*   **Performance Monitoring:** Custom **[LoggingBehavior.cs](./CoreSupply.BuildingBlocks/Behaviors/LoggingBehavior.cs)** in MediatR pipeline to track slow commands.
+*   **Compensation Logic:** Automatic rollback (e.g., releasing stock if payment fails) handled by the Saga State Machine.
 *   **Self-Healing:** Database migration and seeding strategies that handle container restarts gracefully.
 *   **Deep Dive:** 👉 **[Read the Resilience & Fault Tolerance Guide](./docs/architecture/resilience-patterns.md)**.
 
@@ -109,9 +123,11 @@ This project demonstrates mastery of advanced software engineering concepts requ
 | **Catalog API** | Product Inventory Management | .NET 8, Repository Pattern | **MongoDB** | 9001 |
 | **Discount gRPC** | Coupon & Discount Logic (Internal Service) | .NET 8, **gRPC**, ProtoBuf | **SQLite** | 9005 |
 | **Quote API** | Basket & B2B Quote Management | .NET 8, **gRPC Client**, MassTransit | **Redis** | 9002 |
-| **Ordering API** | Order Lifecycle (Core Domain) | .NET 8, **DDD**, **CQRS**, **Saga** | **SQL Server** | 9004 |
+| **Ordering API** | Order Lifecycle & **Saga Orchestrator** | .NET 8, **DDD**, **CQRS**, **Saga** | **SQL Server** | 9004 |
+| **Inventory** | Stock Management & Reservation | .NET 8, **gRPC**, MassTransit | - | - |
+| **Payment** | Payment Processing Simulation | .NET 8, **WebAPI**, MassTransit | - | - |
 | **API Gateway** | Unified Routing & Security | Ocelot, **Polly** | - | 9000 |
-| **Seq** | **Centralized Log Dashboard** | Datalust Seq | - | 5340 |
+| **Seq** | **Centralized Log Dashboard** | Datalust Seq | - | 9880 |
 
 ### **Shared Kernel (BuildingBlocks)**
 A centralized class library that enforces standards across all microservices:
@@ -120,6 +136,27 @@ A centralized class library that enforces standards across all microservices:
 *   **Cross-Cutting Concerns:** `LoggingExtensions` (Serilog config), `ValidationBehavior`, `LoggingBehavior`.
 
 ---
+### **🚀 Deep Dive: Distributed Saga Orchestration**
+
+One of the most complex challenges in distributed systems is managing transactions across multiple services. CoreSupply implements the **Orchestration-based Saga Pattern** using MassTransit State Machines to ensure data consistency.
+
+**The Workflow (Order Fulfillment):**
+1.  **Order Created:** The user checks out, and the order is saved in `Pending` state.
+2.  **Orchestrator Starts:** The `OrderStateMachine` in *Ordering.API* initiates the transaction.
+3.  **Inventory Check:** A command is sent to *Inventory Service*.
+    *   ✅ Success: Proceeds to payment.
+    *   ❌ Failure: Saga ends, Order marked as `Cancelled`.
+4.  **Payment Processing:** A command is sent to *Payment Service*.
+    *   ✅ Success: Order marked as `Completed`.
+    *   ❌ Failure: **Compensation Action** triggers -> A `ReleaseStock` command is sent to Inventory to roll back the reservation.
+
+> **Why Orchestration?** Unlike Choreography, this approach centralizes the business logic, making it easier to monitor, debug, and manage complex workflows with rollbacks.
+
+---
+
+
+
+
 
 ## 🛠️ How to Run (Zero-Config)
 
@@ -142,8 +179,8 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 
 3.  **Access the System:**
     *   **Unified API Gateway:** `http://localhost:9000/catalog`
-    *   **Log Dashboard (Seq):** `http://localhost:5340` (admin / Password12!)
-    *   **RabbitMQ Dashboard:** `http://localhost:16672` (guest/guest)
+    *   **Log Dashboard (Seq):** `http://localhost:9880` (admin / Password12!)
+    *   **RabbitMQ Dashboard:** `http://localhost:18672` (guest/guest)
     *   **Swagger UI:** Available on ports 9001-9005.
 
 ---
@@ -155,8 +192,8 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 | **1. Foundation** | ✅ Done | Microservices & Infrastructure | Docker, Polyglot Persistence, Event Bus setup. |
 | **2. Security** | ✅ Done | Advanced Auth | Refresh Tokens, RBAC, Secrets Management. |
 | **3. Communication** | ✅ Done | gRPC Integration | Synchronous, high-performance link between Basket & Discount. |
-| **4. Orchestration** | ⏳ Next | **Saga Pattern** | Implementing Distributed Transactions (Order -> Inventory -> Payment). |
-| **5. Observability** | 🚧 60% | Distributed Tracing | Adding OpenTelemetry for full request tracing. |
+| **4. Orchestration** | ✅ Done | **Saga Pattern** | Implemented Distributed Transactions (Order -> Inventory -> Payment). |
+| **5. Observability** | ⏳ Next | Distributed Tracing | Adding OpenTelemetry for full request tracing. |
 | **6. Deployment** | ⏳ Pending | Kubernetes (K8s) | Deploying to AKS/Local K8s with Helm Charts. |
 
 ---
