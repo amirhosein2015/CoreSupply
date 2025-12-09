@@ -36,8 +36,8 @@ services:
     image: datalust/seq:latest
     container_name: core.seq
     ports:
-      - "5340:80"
-      - "5341:5341"
+      - "9880:80"
+      - "9881:5341"
     environment:
       - ACCEPT_EULA=Y
       - SEQ_FIRSTRUN_ADMINPASSWORD=${DB_PASSWORD}
@@ -119,8 +119,8 @@ services:
     image: rabbitmq:3.12-management
     container_name: core.eventbus
     ports:
-      - "6672:5672"
-      - "16672:15672"
+      - "8672:5672"
+      - "18672:15672"
     networks:
       - coresupply_network
 
@@ -183,6 +183,39 @@ services:
         condition: service_started
     networks:
       - coresupply_network
+
+
+
+  inventory.grpc:
+    image: ${DOCKER_REGISTRY-}inventorygrpc
+    build:
+      context: .
+      dockerfile: CoreSupply.Inventory.Grpc/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - EventBusSettings__HostAddress=amqp://guest:guest@core.eventbus:5672
+    networks:
+      - coresupply_network
+    depends_on:
+      eventbus:
+        condition: service_started
+
+  payment.api:
+    image: ${DOCKER_REGISTRY-}paymentapi
+    build:
+      context: .
+      dockerfile: CoreSupply.Payment.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - EventBusSettings__HostAddress=amqp://guest:guest@core.eventbus:5672
+    networks:
+      - coresupply_network
+    depends_on:
+      eventbus:
+        condition: service_started
+
 
   identity.api:
     image: ${DOCKER_REGISTRY-}identityapi

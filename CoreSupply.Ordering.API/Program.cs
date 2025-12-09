@@ -6,8 +6,9 @@ using CoreSupply.BuildingBlocks.Logging;
 using CoreSupply.BuildingBlocks.Behaviors;
 using Polly;
 using Microsoft.OpenApi.Models;
-using Microsoft.IdentityModel.Tokens; // اضافه شد
-using System.Text; // اضافه شد
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using CoreSupply.Ordering.API.Sagas;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,31 +19,24 @@ builder.AddCustomSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// --- تنظیمات Swagger با دکمه قفل (Authorize) ---
+// --- تنظیمات Swagger ---
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering API", Version = "v1" });
-
-    // تعریف سیستم احراز هویت JWT
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+        Description = "JWT Authorization header using the Bearer scheme.\r\nExample: \"Bearer 12345abcdef\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
                 Scheme = "oauth2",
                 Name = "Bearer",
                 In = ParameterLocation.Header,
@@ -73,13 +67,38 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
 });
 
-// --- 5. MassTransit ---
-builder.Services.AddMassTransit(config => {
+// --- 5. MassTransit with Saga (UPDATED) ---
+builder.Services.AddMassTransit(config =>
+{
+    // ثبت Consumer قدیمی (Checkout)
     config.AddConsumer<BasketCheckoutConsumer>();
-    config.UsingRabbitMq((ctx, cfg) => {
+
+    // [New] ثبت Saga State Machine
+    config.AddSagaStateMachine<OrderStateMachine, OrderState>()
+        .EntityFrameworkRepository(r =>
+        {
+            // استفاده از کانتکست موجود برای ذخیره وضعیت Saga
+            r.ExistingDbContext<OrderContext>();
+            r.UseSqlServer();
+        });
+
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
         cfg.Host("amqp://guest:guest@core.eventbus:5672");
-        cfg.ReceiveEndpoint("basket-checkout-queue", c => {
+
+        // تنظیم صف برای Consumer قدیمی
+        cfg.ReceiveEndpoint("basket-checkout-queue", c =>
+        {
             c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
+        });
+
+        // [New] تنظیم صف برای Saga
+        cfg.ReceiveEndpoint("order-saga", e =>
+        {
+            const int concurrencyLimit = 10;
+            e.PrefetchCount = concurrencyLimit;
+            e.UseMessageRetry(r => r.Interval(5, 1000));
+            e.ConfigureSaga<OrderState>(ctx);
         });
     });
 });
@@ -89,10 +108,9 @@ builder.Services.AddHttpClient("CatalogClient", client =>
 {
     client.BaseAddress = new Uri("http://catalog.api:8080");
 })
-.AddTransientHttpErrorPolicy(p =>
-    p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+.AddTransientHttpErrorPolicy(p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-// --- 7. Authentication (اصلاح شده) ---
+// --- 7. Authentication ---
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
 
@@ -115,19 +133,23 @@ builder.Services.AddAuthentication("Bearer")
 var app = builder.Build();
 
 // --- Pipeline ---
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<OrderContext>();
-        context.Database.Migrate();
+
+        // [CRITICAL FIX] استفاده از EnsureCreated به جای Migrate برای ساخت خودکار جداول Saga
+        context.Database.EnsureCreated();
+
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Database and Saga tables ensured successfully.");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while creating the database.");
     }
 }
 
@@ -137,9 +159,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication(); // حتما قبل از Authorization
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

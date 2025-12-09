@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.env = .env
 		docker-compose.yml = docker-compose.yml
+		global.json = global.json
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Catalog.API", "CoreSupply.Catalog.API\CoreSupply.Catalog.API.csproj", "{6665D71D-C37B-4EAB-896E-9C1D80B67C64}"
@@ -26,6 +27,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.IntegrationTests", "CoreSupply.IntegrationTests\CoreSupply.IntegrationTests.csproj", "{24FC8091-EBC5-4F74-837D-A4F0385CF165}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Discount.Grpc", "CoreSupply.Discount.Grpc\CoreSupply.Discount.Grpc.csproj", "{E78F85E9-BC40-4AF3-BEF0-96BE5B6DB917}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Inventory.Grpc", "CoreSupply.Inventory.Grpc\CoreSupply.Inventory.Grpc.csproj", "{CC3F576C-F2EF-4341-9A14-23DD64180212}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreSupply.Payment.API", "CoreSupply.Payment.API\CoreSupply.Payment.API.csproj", "{78D32BF1-F6AA-4DAB-B6E0-48B71D4672A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +74,14 @@ Global
 		{E78F85E9-BC40-4AF3-BEF0-96BE5B6DB917}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E78F85E9-BC40-4AF3-BEF0-96BE5B6DB917}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E78F85E9-BC40-4AF3-BEF0-96BE5B6DB917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC3F576C-F2EF-4341-9A14-23DD64180212}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC3F576C-F2EF-4341-9A14-23DD64180212}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC3F576C-F2EF-4341-9A14-23DD64180212}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC3F576C-F2EF-4341-9A14-23DD64180212}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78D32BF1-F6AA-4DAB-B6E0-48B71D4672A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78D32BF1-F6AA-4DAB-B6E0-48B71D4672A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78D32BF1-F6AA-4DAB-B6E0-48B71D4672A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78D32BF1-F6AA-4DAB-B6E0-48B71D4672A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

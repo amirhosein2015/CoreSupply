@@ -1,5 +1,7 @@
 ﻿using CoreSupply.BuildingBlocks.DDD;
 using CoreSupply.Ordering.API.Domain.Entities;
+using CoreSupply.Ordering.API.Sagas; // [New] اضافه شد
+using MassTransit; // [New] اضافه شد
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreSupply.Ordering.API.Infrastructure.Persistence
@@ -12,16 +14,29 @@ namespace CoreSupply.Ordering.API.Infrastructure.Persistence
 
         public DbSet<Order> Orders { get; set; }
 
+        // [New] جدول وضعیت Saga
+        public DbSet<OrderState> OrderStates { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // اینجا می‌توانید تنظیمات خاص دیتابیس را بنویسید
-            // مثلا محدودیت طول رشته‌ها و غیره
             base.OnModelCreating(modelBuilder);
+
+            // [New] تنظیمات مربوط به MassTransit Saga Persistence
+            // این متدها جداول Inbox, Outbox و State را به صورت خودکار مپ می‌کنند
+            modelBuilder.AddInboxStateEntity();
+            modelBuilder.AddOutboxMessageEntity();
+            modelBuilder.AddOutboxStateEntity();
+
+            // تنظیم کلید اصلی برای OrderState
+            modelBuilder.Entity<OrderState>().HasKey(x => x.CorrelationId);
+
+            // کانفیگ‌های قبلی شما (اگر دارید)
+            // modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrderContext).Assembly);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // پر کردن خودکار فیلدهای Audit (تاریخ ایجاد و ویرایش)
+            // پر کردن خودکار فیلدهای Audit
             foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
             {
                 switch (entry.State)
@@ -36,7 +51,6 @@ namespace CoreSupply.Ordering.API.Infrastructure.Persistence
                         break;
                 }
             }
-
             return base.SaveChangesAsync(cancellationToken);
         }
     }

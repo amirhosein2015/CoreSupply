@@ -1,38 +1,65 @@
-﻿using CoreSupply.BuildingBlocks.Events; // استفاده از قرارداد مشترک
-using CoreSupply.Ordering.API.Application.Commands;
-using MassTransit;
-using MediatR;
+﻿using CoreSupply.BuildingBlocks.Events;
+using CoreSupply.BuildingBlocks.Messaging.Events; // برای دسترسی به ایونت‌های Saga
+using CoreSupply.Ordering.API.Domain.Entities;
+using CoreSupply.Ordering.API.Infrastructure.Persistence;
 using Mapster;
+using MassTransit;
+using MediatR; // اگر از MediatR برای کامندها استفاده می‌کنید (اختیاری)
 
-namespace CoreSupply.Ordering.API.EventBusConsumer
+namespace CoreSupply.Ordering.API.EventBusConsumer;
+
+public class BasketCheckoutConsumer : IConsumer<BasketCheckoutEvent>
 {
-    // این کلاس مسئول دریافت پیام از RabbitMQ است
-    public class BasketCheckoutConsumer : IConsumer<BasketCheckoutEvent>
+    private readonly OrderContext _context;
+    private readonly ILogger<BasketCheckoutConsumer> _logger;
+    private readonly IPublishEndpoint _publishEndpoint; // [New] برای شروع Saga
+
+    public BasketCheckoutConsumer(OrderContext context, ILogger<BasketCheckoutConsumer> logger, IPublishEndpoint publishEndpoint)
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<BasketCheckoutConsumer> _logger;
+        _context = context;
+        _logger = logger;
+        _publishEndpoint = publishEndpoint;
+    }
 
-        public BasketCheckoutConsumer(IMediator mediator, ILogger<BasketCheckoutConsumer> logger)
+    public async Task Consume(ConsumeContext<BasketCheckoutEvent> context)
+    {
+        _logger.LogInformation("Integration Event received: {EventId}", context.MessageId);
+
+        var eventMsg = context.Message;
+
+        // 1. تبدیل پیام به موجودیت سفارش (Mapping)
+        // نکته: اینجا ساده‌سازی کردیم. در پروژه واقعی از MediatR Command استفاده کنید.
+        var order = new Order
         {
-            _mediator = mediator;
-            _logger = logger;
-        }
+            UserName = eventMsg.UserName,
+            TotalPrice = eventMsg.TotalPrice,
+            FirstName = eventMsg.FirstName,
+            LastName = eventMsg.LastName,
+            EmailAddress = eventMsg.EmailAddress,
+            AddressLine = eventMsg.AddressLine,
+            Country = eventMsg.Country,
+            State = eventMsg.State,
+            ZipCode = eventMsg.ZipCode,
+            CardName = eventMsg.CardName,
+            CardNumber = eventMsg.CardNumber,
+            Expiration = eventMsg.Expiration,
+            CVV = eventMsg.CVV,
+            PaymentMethod = 1, // فرضا کارت
+            Status = "Pending" // وضعیت اولیه
+        };
 
-        public async Task Consume(ConsumeContext<BasketCheckoutEvent> context)
-        {
-            // 1. دریافت پیام
-            var eventMessage = context.Message;
+        // 2. ذخیره در دیتابیس SQL
+        _context.Orders.Add(order);
+        await _context.SaveChangesAsync();
 
-            _logger.LogInformation("BasketCheckoutEvent consumed successfully. Creating Order for User: {UserName}", eventMessage.UserName);
+        _logger.LogInformation("Order {OrderId} saved successfully. Starting Saga...", order.Id);
 
-            // 2. تبدیل پیام (Event) به دستور داخلی (Command)
-            // چون ما قبلاً لاجیک ثبت سفارش را در CreateOrderCommand نوشتیم، دوباره آن را صدا می‌زنیم
-            var command = eventMessage.Adapt<CreateOrderCommand>();
-
-            // 3. ارسال دستور به هندلر (CQRS)
-            var result = await _mediator.Send(command);
-
-            _logger.LogInformation("Order created successfully with Id: {OrderId}", result);
-        }
+        // 3. [CRITICAL STEP] شروع Saga
+        // ارسال ایونتی که StateMachine منتظر آن است
+        await _publishEndpoint.Publish(new OrderCreatedEvent(
+            order.Id,
+            order.UserName,
+            order.TotalPrice
+        ));
     }
 }
