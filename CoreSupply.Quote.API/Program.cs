@@ -3,11 +3,16 @@ using MassTransit;
 using CoreSupply.BuildingBlocks.Logging;
 using CoreSupply.Quote.API.Services;
 using CoreSupply.Discount.Grpc.Protos;
+using CoreSupply.BuildingBlocks.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 0. Logging
+// --- 1. Logging ---
 builder.AddCustomSerilog();
+
+// --- 2. Observability (New Feature) ---
+// فعال‌سازی OpenTelemetry برای مانیتورینگ
+builder.AddCustomOpenTelemetry();
 
 // --- Add services to the container ---
 

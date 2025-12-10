@@ -14,6 +14,7 @@
     <None Include="docker-compose-mini.yml" />
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
+    <None Include="global.json.bak" />
     <!-- Ensure the Docker override file is included, even if empty -->
   </ItemGroup>
 </Project>

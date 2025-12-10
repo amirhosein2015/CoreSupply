@@ -1,9 +1,18 @@
-﻿using CoreSupply.Payment.API.Consumers;
+﻿using CoreSupply.BuildingBlocks.Logging;
+using CoreSupply.BuildingBlocks.Observability;
+using CoreSupply.Payment.API.Consumers;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+// --- 1. Logging ---
+builder.AddCustomSerilog();
+
+// --- 2. Observability (New Feature) ---
+// فعال‌سازی OpenTelemetry برای مانیتورینگ
+builder.AddCustomOpenTelemetry();
 
 // --- تنظیمات MassTransit ---
 builder.Services.AddMassTransit(config =>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using CoreSupply.Ordering.API.EventBusConsumer;
 using CoreSupply.BuildingBlocks.Logging;
+using CoreSupply.BuildingBlocks.Observability; // [New] Namespace for OTEL
 using CoreSupply.BuildingBlocks.Behaviors;
 using Polly;
 using Microsoft.OpenApi.Models;
@@ -15,7 +16,11 @@ var builder = WebApplication.CreateBuilder(args);
 // --- 1. Logging ---
 builder.AddCustomSerilog();
 
-// --- 2. API Services ---
+// --- 2. Observability (New Feature) ---
+// فعال‌سازی OpenTelemetry برای مانیتورینگ
+builder.AddCustomOpenTelemetry();
+
+// --- 3. API Services ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -46,7 +51,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// --- 3. Database with Polly Retry ---
+// --- 4. Database with Polly Retry ---
 builder.Services.AddDbContext<OrderContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("OrderingConnectionString"),
@@ -59,7 +64,7 @@ builder.Services.AddDbContext<OrderContext>(options =>
         }
     ));
 
-// --- 4. MediatR ---
+// --- 5. MediatR ---
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
@@ -67,17 +72,14 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
 });
 
-// --- 5. MassTransit with Saga (UPDATED) ---
+// --- 6. MassTransit with Saga ---
 builder.Services.AddMassTransit(config =>
 {
-    // ثبت Consumer قدیمی (Checkout)
     config.AddConsumer<BasketCheckoutConsumer>();
 
-    // [New] ثبت Saga State Machine
     config.AddSagaStateMachine<OrderStateMachine, OrderState>()
         .EntityFrameworkRepository(r =>
         {
-            // استفاده از کانتکست موجود برای ذخیره وضعیت Saga
             r.ExistingDbContext<OrderContext>();
             r.UseSqlServer();
         });
@@ -86,13 +88,11 @@ builder.Services.AddMassTransit(config =>
     {
         cfg.Host("amqp://guest:guest@core.eventbus:5672");
 
-        // تنظیم صف برای Consumer قدیمی
         cfg.ReceiveEndpoint("basket-checkout-queue", c =>
         {
             c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
         });
 
-        // [New] تنظیم صف برای Saga
         cfg.ReceiveEndpoint("order-saga", e =>
         {
             const int concurrencyLimit = 10;
@@ -103,14 +103,14 @@ builder.Services.AddMassTransit(config =>
     });
 });
 
-// --- 6. HttpClient ---
+// --- 7. HttpClient ---
 builder.Services.AddHttpClient("CatalogClient", client =>
 {
     client.BaseAddress = new Uri("http://catalog.api:8080");
 })
 .AddTransientHttpErrorPolicy(p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
-// --- 7. Authentication ---
+// --- 8. Authentication ---
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
 
@@ -139,8 +139,6 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<OrderContext>();
-
-        // [CRITICAL FIX] استفاده از EnsureCreated به جای Migrate برای ساخت خودکار جداول Saga
         context.Database.EnsureCreated();
 
         var logger = services.GetRequiredService<ILogger<Program>>();

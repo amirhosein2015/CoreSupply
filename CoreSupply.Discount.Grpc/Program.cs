@@ -2,11 +2,16 @@
 using CoreSupply.Discount.Grpc.Services;
 using CoreSupply.BuildingBlocks.Logging;
 using CoreSupply.Discount.Grpc.Extensions;
+using CoreSupply.BuildingBlocks.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Logging
+// --- 1. Logging ---
 builder.AddCustomSerilog();
+
+// --- 2. Observability (New Feature) ---
+// فعال‌سازی OpenTelemetry برای مانیتورینگ
+builder.AddCustomOpenTelemetry();
 
 // 2. Services
 builder.Services.AddGrpc();
