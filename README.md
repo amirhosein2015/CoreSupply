@@ -19,7 +19,6 @@
 [![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
 [![Tests](https://img.shields.io/badge/Tests-Integration_%26_Unit-success?style=flat-square&logo=testcafe)](https://xunit.net/)
 
-
 > **Enterprise-grade B2B solution for the DACH market, built with modern .NET 8 standards.**
 
 **CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
@@ -66,6 +65,10 @@ graph TD
         Identity -.-> Seq
         Gateway -.-> Seq
         Discount -.-> Seq
+        
+        %% Tracing
+        Ordering -.-> Jaeger[Jaeger Tracing]
+        Basket -.-> Jaeger
     end
     
     subgraph "Quality Assurance"
@@ -92,9 +95,9 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **API Gateway:** Unified entry point using **Ocelot** for routing and aggregation.
 
 ### **3. Observability & DevOps**
+*   **Distributed Tracing:** Full end-to-end request tracing using **OpenTelemetry** and **Jaeger**.
 *   **Centralized Logging:** Structured logging aggregation using **[Serilog configuration](./CoreSupply.BuildingBlocks/Logging/LoggingExtensions.cs)** and **Seq**.
 *   **Docker Compose:** Zero-config deployment via [docker-compose.yml](./docker-compose.yml).
-*   **Port Management:** Strategic port mapping to avoid Windows Hyper-V conflicts (Safe Ports 6000+ for Infra). 
 *   **Deep Dive:** 👉 **[Read the Observability Guide](./docs/observability/observability-guide.md)**.
 
 ### **4. System Resilience**
@@ -115,27 +118,6 @@ This project demonstrates mastery of advanced software engineering concepts requ
 
 ---
 
-## 🧩 Microservices Breakdown
-
-| Service | Responsibility | Tech Stack | Database | Port |
-| :--- | :--- | :--- | :--- | :--- |
-| **Identity API** | Centralized Authentication (**JWT + Refresh Token**) | .NET 8, Identity Core | **PostgreSQL** | 9003 |
-| **Catalog API** | Product Inventory Management | .NET 8, Repository Pattern | **MongoDB** | 9001 |
-| **Discount gRPC** | Coupon & Discount Logic (Internal Service) | .NET 8, **gRPC**, ProtoBuf | **SQLite** | 9005 |
-| **Quote API** | Basket & B2B Quote Management | .NET 8, **gRPC Client**, MassTransit | **Redis** | 9002 |
-| **Ordering API** | Order Lifecycle & **Saga Orchestrator** | .NET 8, **DDD**, **CQRS**, **Saga** | **SQL Server** | 9004 |
-| **Inventory** | Stock Management & Reservation | .NET 8, **gRPC**, MassTransit | - | - |
-| **Payment** | Payment Processing Simulation | .NET 8, **WebAPI**, MassTransit | - | - |
-| **API Gateway** | Unified Routing & Security | Ocelot, **Polly** | - | 9000 |
-| **Seq** | **Centralized Log Dashboard** | Datalust Seq | - | 9880 |
-
-### **Shared Kernel (BuildingBlocks)**
-A centralized class library that enforces standards across all microservices:
-*   **CQRS Abstractions:** `ICommand`, `IQuery`, `ICommandHandler`.
-*   **DDD Base Classes:** `Entity`, `AggregateRoot`, `IDomainEvent`.
-*   **Cross-Cutting Concerns:** `LoggingExtensions` (Serilog config), `ValidationBehavior`, `LoggingBehavior`.
-
----
 ### **🚀 Deep Dive: Distributed Saga Orchestration**
 
 One of the most complex challenges in distributed systems is managing transactions across multiple services. CoreSupply implements the **Orchestration-based Saga Pattern** using MassTransit State Machines to ensure data consistency.
@@ -154,10 +136,6 @@ One of the most complex challenges in distributed systems is managing transactio
 
 ---
 
-
-
-
-
 ## 🛠️ How to Run (Zero-Config)
 
 You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles everything.
@@ -175,11 +153,12 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
     ```bash
     docker-compose up -d --build
     ```
-    *Wait ~30 seconds for databases to initialize.*
+    *Wait ~60 seconds for databases to initialize.*
 
 3.  **Access the System:**
     *   **Unified API Gateway:** `http://localhost:9000/catalog`
     *   **Log Dashboard (Seq):** `http://localhost:9880` (admin / Password12!)
+    *   **Tracing Dashboard (Jaeger):** `http://localhost:16686`
     *   **RabbitMQ Dashboard:** `http://localhost:18672` (guest/guest)
     *   **Swagger UI:** Available on ports 9001-9005.
 
@@ -193,8 +172,8 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 | **2. Security** | ✅ Done | Advanced Auth | Refresh Tokens, RBAC, Secrets Management. |
 | **3. Communication** | ✅ Done | gRPC Integration | Synchronous, high-performance link between Basket & Discount. |
 | **4. Orchestration** | ✅ Done | **Saga Pattern** | Implemented Distributed Transactions (Order -> Inventory -> Payment). |
-| **5. Observability** | ⏳ Next | Distributed Tracing | Adding OpenTelemetry for full request tracing. |
-| **6. Deployment** | ⏳ Pending | Kubernetes (K8s) | Deploying to AKS/Local K8s with Helm Charts. |
+| **5. Observability** | ✅ Done | **Distributed Tracing** | Implemented OpenTelemetry and Jaeger for full request visualization. |
+| **6. Deployment** | ⏳ Next | Kubernetes (K8s) | Deploying to AKS/Local K8s with Helm Charts. |
 
 ---
 
