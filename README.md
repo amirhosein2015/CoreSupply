@@ -164,6 +164,23 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 
 ---
 
+## 📸 Visual Evidence
+
+### 1. Distributed Tracing (Jaeger)
+*End-to-End trace visualization of the Saga transaction (Basket -> Order -> Inventory -> Payment). Shows the exact latency and path of the request across microservices.*
+![Jaeger Trace](./assets/jaeger-trace-saga.png)
+
+### 2. Observability Dashboard (Seq)
+*Real-time structured logging aggregation from all microservices, allowing for deep filtering and debugging.*
+![Seq Dashboard](./assets/seq-dashboard.png)
+
+### 3. Automated Integration Tests
+*Result of running the integration test suite, verifying the correctness of the API endpoints and database interactions.*
+![Test Results](./assets/test-pass.png)
+
+---
+
+
 ## 🔮 Roadmap (Principal Level Goals)
 
 | Phase | Status | Feature | Details |
