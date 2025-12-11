@@ -1,81 +1,76 @@
-
 # 🏭 CoreSupply | Cloud-Native Industrial Supply Chain Platform
 
-<!-- Tech Stack & Version -->
+<!-- Tech Stack & Orchestration -->
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Kubernetes](https://img.shields.io/badge/Orchestration-Kubernetes_(K8s)-326ce5?style=flat-square&logo=kubernetes)](https://kubernetes.io/)
+[![Docker](https://img.shields.io/badge/Container-Docker-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Status](https://img.shields.io/badge/Status-Cloud_Ready-success?style=flat-square)](https://github.com/amirhosein2015/CoreSupply)
 
-<!-- Architecture Patterns (The "Principal" stuff) -->
+<!-- Architecture Patterns (Principal Engineering) -->
 [![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blueviolet?style=flat-square&logo=microservices)](https://github.com/amirhosein2015/CoreSupply)
 [![Pattern](https://img.shields.io/badge/Pattern-Saga_Orchestration-ff69b4?style=flat-square)](https://masstransit.io/documentation/patterns/saga)
 [![Pattern](https://img.shields.io/badge/Design-DDD_%26_CQRS-blue?style=flat-square)](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/)
 
-<!-- Critical Communication Infra -->
+<!-- Communication & Observability -->
 [![Messaging](https://img.shields.io/badge/Messaging-MassTransit_%2B_RabbitMQ-orange?style=flat-square&logo=rabbitmq)](https://masstransit.io/)
 [![Protocol](https://img.shields.io/badge/Protocol-gRPC_(HTTP%2F2)-333333?style=flat-square&logo=grpc)](https://grpc.io/)
+[![Observability](https://img.shields.io/badge/Tracing-OpenTelemetry_%2B_Jaeger-005571?style=flat-square&logo=opentelemetry)](https://opentelemetry.io/)
 
-<!-- Quality & DevOps -->
+<!-- Quality Assurance -->
 [![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
 [![Tests](https://img.shields.io/badge/Tests-Integration_%26_Unit-success?style=flat-square&logo=testcafe)](https://xunit.net/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-> **Enterprise-grade B2B solution for the DACH market, built with modern .NET 8 standards.**
+> **Enterprise-grade, Cloud-Native B2B solution for the DACH market, engineered with modern .NET 8 standards.**
 
-**CoreSupply** is not just an e-commerce backend; it is a distributed system architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Domain-Driven Design (DDD)** to ensure loose coupling, high scalability, and fault tolerance.
+**CoreSupply** is more than just an e-commerce backend; it is a **production-ready distributed system** architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Kubernetes Orchestration** to ensure loose coupling, massive scalability, and fault tolerance.
 
-The primary goal of this project is to demonstrate **Principal-level** engineering practices, including robust observability, resiliency patterns, and automated integration testing.
+The primary goal of this project is to demonstrate **Principal-level** engineering mastery, featuring advanced patterns like **Saga Orchestration**, **Distributed Tracing**, and **Resilient Cloud Deployment**.
 
 ![Microservice Diagram](https://github.com/user-attachments/assets/77fc23ec-1806-4fd9-bb76-f8b93d1b0e78)
 
 ---
 
-## 🏗️ High-Level Architecture
+## 🏗️ High-Level Architecture (Kubernetes Cluster)
 
-The system follows **Clean Architecture** principles and uses a hybrid communication strategy (**Sync gRPC** for speed, **Async Messaging** for consistency).
+The system follows **Clean Architecture** principles and is deployed as a set of scalable pods within a **Kubernetes Cluster**, using a hybrid communication strategy (**Sync gRPC** for speed, **Async Messaging** for consistency).
 
 ```mermaid
 graph TD
-    Client[Web/Mobile Client] --> Gateway[Ocelot API Gateway :9000]
+    Client[Web/Mobile Client] --> Ingress[K8s LoadBalancer / Ingress]
+    Ingress --> Gateway[Ocelot API Gateway Pod]
     
-    subgraph "Internal Network (Docker)"
-        Gateway --> Identity[Identity API]
-        Gateway --> Catalog[Catalog API]
-        Gateway --> Basket[Basket API]
-        Gateway --> Ordering[Ordering API]
+    subgraph "Kubernetes Cluster - Namespace: coresupply-ns"
+        Gateway --> Identity[Identity API Service]
+        Gateway --> Catalog[Catalog API Service]
+        Gateway --> Basket[Basket API Service]
+        Gateway --> Ordering[Ordering API Service]
         
         %% Synchronous Communication
-        Basket -- gRPC (HTTP/2) --> Discount[Discount gRPC]
-        Discount --> SQLite[(SQLite)]
+        Basket -- gRPC HTTP/2 --> Discount[Discount gRPC Service]
+        Discount --> SQLite[("SQLite (In-Pod)")]
 
-        %% Asynchronous Communication
-        Basket -- Publishes Checkout Event --> EventBus[RabbitMQ / MassTransit]
-        EventBus -- Consumes Event --> Ordering
-        Ordering -- Orchestrates --> Inventory[Inventory gRPC]
-        Ordering -- Orchestrates --> Payment[Payment API]
+        %% Asynchronous Communication Saga
+        Basket -- Checkout Event --> EventBus[RabbitMQ / MassTransit]
+        EventBus -- OrderCreated --> Ordering
+        Ordering -- Orchestrates Command --> Inventory[Inventory gRPC Service]
+        Ordering -- Orchestrates Command --> Payment[Payment API Service]
         
-        %% Data Stores
+        %% Data Infrastructure StatefulSets
         Identity --> AuthDB[(PostgreSQL)]
         Catalog --> CatDB[(MongoDB)]
         Basket --> Redis[(Redis Cache)]
         Ordering --> OrderDB[(SQL Server)]
         
-        %% Observability
-        Ordering -.-> Seq[Seq Logging Server]
-        Basket -.-> Seq
-        Identity -.-> Seq
-        Gateway -.-> Seq
-        Discount -.-> Seq
+        %% Observability Plane
+        Ordering -.-> Telemetry[OpenTelemetry Collector]
+        Basket -.-> Telemetry
+        Gateway -.-> Telemetry
         
-        %% Tracing
-        Ordering -.-> Jaeger[Jaeger Tracing]
-        Basket -.-> Jaeger
-    end
-    
-    subgraph "Quality Assurance"
-        Tests[Integration Tests] -.-> Ordering
+        Telemetry --> Seq[Seq Logging]
+        Telemetry --> Jaeger[Jaeger Tracing]
     end
 ```
-
 ---
 
 ## 🚀 Engineering Excellence & Patterns
@@ -116,6 +111,12 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Secrets Management:** Environment-based configuration following 12-Factor App principles (no hardcoded secrets).
 *   **Deep Dive:** 👉 **[Read the Security Architecture Guide](./docs/architecture/security-architecture.md)**.
 
+### **7. Cloud Infrastructure & DevOps**
+*   **Kubernetes (K8s):** Full production-grade deployment manifests including `Deployments`, `Services`, `Secrets`, and `ConfigMaps`.
+*   **Infrastructure as Code (IaC):** Declarative YAML configuration for the entire stack (Infrastructure + Application).
+*   **Ingress Controller:** Traffic management and routing handled natively within the cluster.
+*   **Deep Dive:** 👉 **[Explore the Kubernetes Manifests](./k8s/)** to see how we manage stateful and stateless workloads.
+
 ---
 
 ### **🚀 Deep Dive: Distributed Saga Orchestration**
@@ -135,32 +136,60 @@ One of the most complex challenges in distributed systems is managing transactio
 > **Why Orchestration?** Unlike Choreography, this approach centralizes the business logic, making it easier to monitor, debug, and manage complex workflows with rollbacks.
 
 ---
+## 🛠️ How to Run
 
-## 🛠️ How to Run (Zero-Config)
-
-You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles everything.
+You have two options to run CoreSupply: **Docker Compose** (Quick Start) or **Kubernetes** (Production Simulation).
 
 ### Prerequisites
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop) (Linux Containers mode)
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop) (Linux Containers mode).
+*   **For K8s:** Enable Kubernetes in Docker Desktop settings.
 
-### Installation
-1.  **Clone the repository:**
+---
+
+### 🟢 Option 1: Docker Compose (Quick Start)
+Best for development and debugging.
+
+1.  **Clone & Launch:**
     ```bash
     git clone https://github.com/amirhosein2015/CoreSupply.git
     cd CoreSupply
-    ```
-2.  **Launch the Platform:**
-    ```bash
     docker-compose up -d --build
     ```
-    *Wait ~60 seconds for databases to initialize.*
+    *Wait ~60 seconds for SQL Server to initialize.*
 
-3.  **Access the System:**
+2.  **Access the System:**
     *   **Unified API Gateway:** `http://localhost:9000/catalog`
     *   **Log Dashboard (Seq):** `http://localhost:9880` (admin / Password12!)
-    *   **Tracing Dashboard (Jaeger):** `http://localhost:16686`
-    *   **RabbitMQ Dashboard:** `http://localhost:18672` (guest/guest)
-    *   **Swagger UI:** Available on ports 9001-9005.
+    *   **Tracing (Jaeger):** `http://localhost:16686`
+    *   **RabbitMQ:** `http://localhost:18672` (guest/guest)
+
+---
+
+### 🔵 Option 2: Kubernetes (Production Simulation)
+Best for validating deployment manifests and microservices orchestration.
+
+1.  **Setup Namespace & Secrets:**
+    ```bash
+    kubectl apply -f k8s/0-namespace.yaml
+    kubectl apply -f k8s/0-secrets.yaml
+    ```
+
+2.  **Deploy Infrastructure (DBs, Broker):**
+    ```bash
+    kubectl apply -f k8s/1-infrastructure/
+    ```
+
+3.  **Deploy Microservices:**
+    ```bash
+    kubectl apply -f k8s/2-services/
+    ```
+
+4.  **Access (Port Forwarding):**
+    Since Docker Desktop networking can vary, use port-forwarding to access the Gateway:
+    ```bash
+    kubectl port-forward svc/api-gateway 9000:80 -n coresupply-ns
+    ```
+    Now access APIs via `http://localhost:9000`.
 
 ---
 
@@ -190,7 +219,8 @@ You don't need to install SQL Server, RabbitMQ, or Mongo locally. Docker handles
 | **3. Communication** | ✅ Done | gRPC Integration | Synchronous, high-performance link between Basket & Discount. |
 | **4. Orchestration** | ✅ Done | **Saga Pattern** | Implemented Distributed Transactions (Order -> Inventory -> Payment). |
 | **5. Observability** | ✅ Done | **Distributed Tracing** | Implemented OpenTelemetry and Jaeger for full request visualization. |
-| **6. Deployment** | ⏳ Next | Kubernetes (K8s) | Deploying to AKS/Local K8s with Helm Charts. |
+| **6. Deployment** | ✅ Done | **Kubernetes (K8s)** | Full deployment manifests for Infrastructure and Services. |
+| **7. Frontend** | ⏳ Next | **B2B Enterprise Portal** | Developing a modern SPA using **React 18 & TypeScript** with Material UI. |
 
 ---
 
