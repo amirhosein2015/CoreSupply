@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-api
+  namespace: coresupply-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-api
+  template:
+    metadata:
+      labels:
+        app: identity-api
+    spec:
+      containers:
+        - name: identity-api
+          image: identityapi:latest # ????? ????? ????
+          imagePullPolicy: Never    # ??? ???? ??????? ??????? ?? ????? ????? ??????? ??
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DatabaseSettings__ConnectionString
+              value: "Host=core.identitydb;Port=5432;Database=identitydb;Username=admin;Password=Password12!;" # (?? ???????? ???? ?? Secret ??????)
+            - name: JwtSettings__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: JWT_SECRET
+            - name: JwtSettings__Issuer
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: JWT_ISSUER
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-api
+  namespace: coresupply-ns
+spec:
+  selector:
+    app: identity-api
+  ports:
+    - port: 80
+      targetPort: 8080

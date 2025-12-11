@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: procurementdb
+  namespace: coresupply-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: procurementdb
+  template:
+    metadata:
+      labels:
+        app: procurementdb
+    spec:
+      containers:
+        - name: procurementdb
+          image: mcr.microsoft.com/mssql/server:2019-latest
+          ports:
+            - containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: DB_PASSWORD
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core-procurementdb  # ???? ?? Ordering.API ??? ??????
+  namespace: coresupply-ns
+spec:
+  selector:
+    app: procurementdb
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433

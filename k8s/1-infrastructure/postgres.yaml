@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identitydb
+  namespace: coresupply-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identitydb
+  template:
+    metadata:
+      labels:
+        app: identitydb
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              value: "identitydb"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core-identitydb
+  namespace: coresupply-ns
+spec:
+  selector:
+    app: identitydb
+  ports:
+    - port: 5432
+      targetPort: 5432

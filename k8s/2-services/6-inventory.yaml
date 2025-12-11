@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-grpc
+  namespace: coresupply-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-grpc
+  template:
+    metadata:
+      labels:
+        app: inventory-grpc
+    spec:
+      containers:
+        - name: inventory-grpc
+          image: inventorygrpc:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: EventBusSettings__HostAddress
+              value: "amqp://guest:guest@core-eventbus:5672"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-grpc
+  namespace: coresupply-ns
+spec:
+  selector:
+    app: inventory-grpc
+  ports:
+    - port: 8080
+      targetPort: 8080

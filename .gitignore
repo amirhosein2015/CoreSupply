@@ -350,12 +350,16 @@ FodyWeavers.xsd
 docker-compose.override.yml
 .dockerignore
 
-# 3. VS Code settings (if you use it)
+# 3. Kubernetes Secrets (VERY IMPORTANT)
+k8s/*secret*.yaml
+k8s/0-secrets.yaml
+
+# 4. VS Code settings (if you use it)
 .vscode/
 
-# 4. JetBrains Rider settings
+# 5. JetBrains Rider settings
 .idea/
 
-# 5. OS generated files
+# 6. OS generated files
 .DS_Store
 Thumbs.db

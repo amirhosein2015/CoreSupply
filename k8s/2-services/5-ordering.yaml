@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ordering-api
+  namespace: coresupply-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ordering-api
+  template:
+    metadata:
+      labels:
+        app: ordering-api
+    spec:
+      containers:
+        - name: ordering-api
+          image: orderingapi:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ConnectionStrings__OrderingConnectionString
+              value: "Server=core-procurementdb,1433;Database=OrderingDb;User Id=sa;Password=Password12!;TrustServerCertificate=True;"
+            - name: EventBusSettings__HostAddress
+              value: "amqp://guest:guest@core-eventbus:5672"
+            - name: JwtSettings__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: JWT_SECRET
+            - name: JwtSettings__Issuer
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: JWT_ISSUER
+            - name: JwtSettings__Audience
+              valueFrom:
+                secretKeyRef:
+                  name: coresupply-secrets
+                  key: JWT_AUDIENCE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ordering-api
+  namespace: coresupply-ns
+spec:
+  selector:
+    app: ordering-api
+  ports:
+    - port: 80
+      targetPort: 8080
