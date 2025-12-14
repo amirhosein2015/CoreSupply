@@ -30,7 +30,15 @@ The primary goal of this project is to demonstrate **Principal-level** engineeri
 ![Microservice Diagram](https://github.com/user-attachments/assets/77fc23ec-1806-4fd9-bb76-f8b93d1b0e78)
 
 ---
+## Problem Statement
 
+Modern industrial supply chains — especially in sectors such as automotive, manufacturing, and large-scale distribution — face complex challenges in parts procurement, inventory coordination, and multi-party fulfillment workflows across factory and enterprise environments. Traditional monolithic procurement systems are often brittle, difficult to scale, and incapable of supporting distributed orchestration, eventual consistency, and operational transparency required for modern industrial and production-driven systems.
+
+CoreSupply addresses these challenges by providing a cloud-native, microservices-based platform that enables resilient, scalable, and observable procurement workflows across business domains and factory operations. Using a combination of synchronous and asynchronous communication patterns, distributed transaction management (Saga orchestration), and advanced observability with end-to-end tracing and centralized logging, CoreSupply serves as a production-ready, enterprise-grade foundation for B2B parts supply systems operating in industrial and manufacturing contexts.
+
+This platform is designed to support engineering teams building sophisticated supply chain and factory-integrated solutions for industries such as automotive manufacturing, industrial equipment production, and logistics, where reliability, extensibility, maintainability, and cloud readiness are critical to sustained operational excellence.
+
+---
 ## 🏗️ High-Level Architecture (Kubernetes Cluster)
 
 The system follows **Clean Architecture** principles and is deployed as a set of scalable pods within a **Kubernetes Cluster**, using a hybrid communication strategy (**Sync gRPC** for speed, **Async Messaging** for consistency).
