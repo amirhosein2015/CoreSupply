@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './LoginPage';
-// فرض می‌کنیم App.tsx در ریشه src است
 import LandingPage from '../../App'; 
+import DashboardPage from '../dashboard/DashboardPage'; // [New] ایمپورت داشبورد
 
 export const router = createBrowserRouter([
   {
@@ -13,7 +13,11 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '*', // ریدایرکت برای آدرس‌های اشتباه
+    path: '/dashboard', // [New] مسیر جدید
+    element: <DashboardPage />,
+  },
+  {
+    path: '*',
     element: <Navigate to="/" replace />,
   }
 ]);

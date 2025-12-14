@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Box, Button, TextField, Typography, 
-  Paper, InputAdornment, Theme 
+  Paper, InputAdornment, Theme, Alert 
 } from '@mui/material';
 import { useAuth } from '../../infrastructure/auth/AuthContext';
+import { authService } from '../../domain/services/authService';
 import { useNavigate } from 'react-router-dom';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import EmailIcon from '@mui/icons-material/Email'; // آیکون جدید
 import HttpsOutlinedIcon from '@mui/icons-material/HttpsOutlined';
 import FactoryIcon from '@mui/icons-material/Factory';
 
@@ -13,20 +15,46 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-  const onSubmit = (data: any) => {
-    login(data.username, 'mock-token');
-    navigate('/dashboard');
+  const onSubmit = async (data: any) => {
+    setIsLoading(true);
+    setLoginError(null);
+
+    try {
+      // 1. فراخوانی API با مدل صحیح (Email)
+      const response = await authService.login({
+        email: data.email, // [FIX] ارسال ایمیل به جای یوزرنیم
+        password: data.password
+      });
+
+      // 2. ذخیره توکن
+      login(data.email, response.accessToken); // یا response.token
+
+      // 3. هدایت به داشبورد
+      navigate('/dashboard');
+      
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      if (error.response?.status === 401) {
+        setLoginError("Invalid email or password.");
+      } else {
+        setLoginError("Server unavailable. Please try again later.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    // کانتینر اصلی (Flexbox) به جای Grid
     <Box sx={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       
-      {/* سمت چپ: تصویر صنعتی (60% عرض در دسکتاپ) */}
+      {/* سمت چپ */}
       <Box
         sx={{
-          flex: { xs: 0, md: 7 }, // در موبایل مخفی، در دسکتاپ 7 واحد
+          flex: { xs: 0, md: 7 },
           backgroundImage: 'url(https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop)',
           backgroundRepeat: 'no-repeat',
           backgroundColor: (t: Theme) => t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
@@ -52,13 +80,13 @@ export default function LoginPage() {
         </Box>
       </Box>
 
-      {/* سمت راست: فرم (40% عرض در دسکتاپ، 100% در موبایل) */}
+      {/* سمت راست: فرم */}
       <Box 
         component={Paper} 
         elevation={6} 
         square 
         sx={{ 
-          flex: { xs: 12, md: 5 }, // تمام عرض در موبایل، 5 واحد در دسکتاپ
+          flex: { xs: 12, md: 5 },
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
@@ -78,19 +106,31 @@ export default function LoginPage() {
             Please sign in to access the dashboard.
           </Typography>
 
+          {loginError && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {loginError}
+            </Alert>
+          )}
+
           <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
               fullWidth
-              id="username"
-              label="Username / Corporate ID"
+              id="email" // [FIX] تغییر به email
+              label="Email Address" // [FIX] لیبل صحیح
               autoFocus
               InputProps={{
-                startAdornment: <InputAdornment position="start"><PersonOutlineIcon color="action" /></InputAdornment>,
+                startAdornment: <InputAdornment position="start"><EmailIcon color="action" /></InputAdornment>,
               }}
-              {...register('username', { required: 'ID is required' })}
-              error={!!errors.username}
-              helperText={errors.username?.message as string}
+              {...register('email', { // [FIX] تغییر نام فیلد در فرم
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address"
+                }
+              })}
+              error={!!errors.email}
+              helperText={errors.email?.message as string}
             />
             <TextField
               margin="normal"
@@ -111,9 +151,10 @@ export default function LoginPage() {
               fullWidth
               variant="contained"
               size="large"
+              disabled={isLoading}
               sx={{ mt: 4, mb: 2, py: 1.8, fontSize: '1rem' }}
             >
-              Secure Login
+              {isLoading ? 'Signing in...' : 'Secure Login'}
             </Button>
             
             <Box sx={{ textAlign: 'center', mt: 2 }}>
