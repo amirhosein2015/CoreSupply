@@ -272,6 +272,8 @@ services:
       dockerfile: CoreSupply.APIGateway/Dockerfile
     ports:
       - "9000:8080"
+    volumes:
+      - ./CoreSupply.APIGateway/ocelot.json:/app/ocelot.json
     depends_on:
       catalog.api:
         condition: service_started
