@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
@@ -10,6 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import EmailIcon from '@mui/icons-material/Email'; // آیکون جدید
 import HttpsOutlinedIcon from '@mui/icons-material/HttpsOutlined';
 import FactoryIcon from '@mui/icons-material/Factory';
+
+
+
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -31,7 +35,7 @@ export default function LoginPage() {
       });
 
       // 2. ذخیره توکن
-      login(data.email, response.accessToken); // یا response.token
+     login(data.email, response.token);  // یا response.token
 
       // 3. هدایت به داشبورد
       navigate('/dashboard');
