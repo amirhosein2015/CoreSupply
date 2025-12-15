@@ -1,17 +1,32 @@
+// src/domain/services/catalogService.ts
+
 import { httpClient } from '../../infrastructure/api/httpClient';
 import { Product } from '../models/Product';
 
+// تعریف مدل داده‌ای که برای ساخت محصول نیاز داریم
+export interface CreateProductRequest {
+  id?: string | null; 
+  name: string;
+  category: string;
+  summary?: string;
+  description?: string;
+  imageFile?: string;
+  price: number;
+}
+
 export const catalogService = {
-  // دریافت همه محصولات
+  // دریافت لیست محصولات
   getProducts: async (): Promise<Product[]> => {
-    // آدرس دقیق در Ocelot: /catalog (که به /api/v1/catalog سرویس کاتالوگ می‌رود)
-    const response = await httpClient.get<Product[]>('/catalog');
+    // مسیر API Gateway برای کاتالوگ
+    const response = await httpClient.get<Product[]>('/catalog'); 
     return response.data;
   },
 
-  // دریافت یک محصول خاص
-  getProductById: async (id: string): Promise<Product> => {
-    const response = await httpClient.get<Product>(`/catalog/${id}`);
+  // متد جدید: ساخت محصول
+  createProduct: async (product: CreateProductRequest): Promise<Product> => {
+    // ارسال درخواست POST به همان آدرس
+    const response = await httpClient.post<Product>('/catalog', product);
     return response.data;
-  },
+  }
 };
+

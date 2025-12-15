@@ -1,12 +1,15 @@
+// src/app/routes/router.tsx
+
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import LandingPage from '../../App'; 
 import DashboardPage from '../dashboard/DashboardPage';
-import ProductListPage from '../pages/ProductListPage';
-import MainLayout from '../../shared/ui/MainLayout'; // ایمپورت Layout
+import MainLayout from '../../shared/ui/MainLayout';
+
+// ✅ اصلاح مسیر: اشاره به پوشه catalog
+import ProductListPage from '../pages/catalog/ProductListPage';
 
 export const router = createBrowserRouter([
-  // مسیرهای عمومی (بدون Layout)
   {
     path: '/',
     element: <LandingPage />,
@@ -15,10 +18,8 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <LoginPage />,
   },
-
-  // مسیرهای داخلی (با Layout و Sidebar)
   {
-    element: <MainLayout />, // این کامپوننت مادر است
+    element: <MainLayout />,
     children: [
       {
         path: '/dashboard',
@@ -30,12 +31,10 @@ export const router = createBrowserRouter([
       },
       {
         path: '/orders',
-        element: <div>🚧 Orders Page (Coming Soon)</div>,
+        element: <div style={{ padding: 20 }}>🚧 Orders Page (Coming Soon)</div>,
       }
     ]
   },
-
-  // مسیر پیش‌فرض (ریدایرکت)
   {
     path: '*',
     element: <Navigate to="/" replace />,
