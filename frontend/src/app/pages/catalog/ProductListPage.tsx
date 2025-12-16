@@ -6,12 +6,13 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // ✅ آیکون جدید
 
 import { catalogService } from '../../../domain/services/catalogService';
 import { Product } from '../../../domain/models/Product';
 import { CreateProductDialog, CreateProductInputs } from './components/CreateProductDialog';
-// ✅ ایمپورت کامپوننت جدید
 import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog';
+import { useBasket } from '../../../infrastructure/context/BasketContext'; // ✅ هوک جدید
 
 export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,10 +23,13 @@ export default function ProductListPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // ✅ States for Delete Dialog
+  // States for Delete Dialog
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // ✅ دسترسی به متد سبد خرید
+  const { addToBasket } = useBasket();
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -98,23 +102,17 @@ export default function ProductListPage() {
     }
   };
 
-  // --- ✅ Handlers for Delete ---
-  
-  // 1. فقط دیالوگ را باز می‌کند و ID را ست می‌کند
+  // --- Handlers for Delete ---
   const handleRequestDelete = (id: string) => {
     setDeleteTargetId(id);
     setIsDeleteOpen(true);
   };
 
-  // 2. وقتی کاربر دکمه قرمز Delete را در دیالوگ زد
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
-
     try {
-      setIsDeleting(true); // لودینگ روی دکمه دیالوگ
+      setIsDeleting(true);
       await catalogService.deleteProduct(deleteTargetId);
-      
-      // بستن و رفرش
       setIsDeleteOpen(false);
       setDeleteTargetId(null);
       await fetchProducts();
@@ -123,6 +121,17 @@ export default function ProductListPage() {
       alert("Failed to delete product.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // ✅ هندلر ساده برای دکمه خرید
+  const handleAddToCart = async (product: Product) => {
+    try {
+      await addToBasket(product);
+      alert(`${product.name} added to cart!`); 
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add to cart.");
     }
   };
 
@@ -156,10 +165,22 @@ export default function ProductListPage() {
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 120,
+      width: 160, // عرض بیشتر برای 3 دکمه
       sortable: false,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+          
+          {/* ✅ دکمه جدید: افزودن به سبد */}
+          <Tooltip title="Add to Cart">
+            <IconButton 
+              color="success" 
+              onClick={() => handleAddToCart(params.row as Product)}
+              size="small"
+            >
+              <ShoppingCartIcon />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="Edit Product">
             <IconButton 
               color="primary" 
@@ -173,7 +194,6 @@ export default function ProductListPage() {
           <Tooltip title="Delete Product">
             <IconButton 
               color="error" 
-              // ✅ تغییر هندلر به تابع جدید
               onClick={() => handleRequestDelete(params.row.id)}
               size="small"
             >
@@ -226,7 +246,7 @@ export default function ProductListPage() {
         productToEdit={selectedProduct}
       />
 
-      {/* ✅ Dialog for Delete Confirmation */}
+      {/* Dialog for Delete Confirmation */}
       <ConfirmDialog 
         open={isDeleteOpen}
         title="Delete Product"

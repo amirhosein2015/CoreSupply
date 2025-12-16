@@ -1,10 +1,13 @@
+// src/main.tsx
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CssBaseline, ThemeProvider } from '@mui/material'
-import { RouterProvider } from 'react-router-dom' // مهم
-import { router } from './app/routes/router'       // مهم
+import { RouterProvider } from 'react-router-dom'
+import { router } from './app/routes/router'
 import { AuthProvider } from './infrastructure/auth/AuthContext'
+// ✅ ایمپورت جدید
+import { BasketProvider } from './infrastructure/context/BasketContext' 
 import { industrialTheme } from './shared/ui/theme'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -12,8 +15,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider theme={industrialTheme}>
       <CssBaseline />
       <AuthProvider>
-        <RouterProvider router={router} /> {/* اینجا باید RouterProvider باشد */}
+        {/* ✅ BasketProvider باید فرزند AuthProvider باشد تا به user دسترسی داشته باشد */}
+        <BasketProvider>
+          <RouterProvider router={router} />
+        </BasketProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>,
 )
+
