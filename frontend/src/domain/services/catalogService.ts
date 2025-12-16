@@ -3,9 +3,8 @@
 import { httpClient } from '../../infrastructure/api/httpClient';
 import { Product } from '../models/Product';
 
-// تعریف مدل داده‌ای که برای ساخت محصول نیاز داریم
 export interface CreateProductRequest {
-  id?: string | null; 
+  id?: string | null;
   name: string;
   category: string;
   summary?: string;
@@ -17,16 +16,19 @@ export interface CreateProductRequest {
 export const catalogService = {
   // دریافت لیست محصولات
   getProducts: async (): Promise<Product[]> => {
-    // مسیر API Gateway برای کاتالوگ
     const response = await httpClient.get<Product[]>('/catalog'); 
     return response.data;
   },
 
-  // متد جدید: ساخت محصول
+  // ساخت محصول جدید
   createProduct: async (product: CreateProductRequest): Promise<Product> => {
-    // ارسال درخواست POST به همان آدرس
     const response = await httpClient.post<Product>('/catalog', product);
     return response.data;
+  }, // <--- ویرگول مهم اینجاست که متدها را جدا می‌کند
+
+  // حذف محصول
+  deleteProduct: async (id: string): Promise<void> => {
+    await httpClient.delete(`/catalog/${id}`);
   }
 };
 

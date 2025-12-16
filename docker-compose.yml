@@ -37,7 +37,7 @@ services:
     container_name: core.seq
     ports:
       - "9880:80"
-      - "9881:5341"
+      - "9891:5341"
     environment:
       - ACCEPT_EULA=Y
       - SEQ_FIRSTRUN_ADMINPASSWORD=${DB_PASSWORD}
