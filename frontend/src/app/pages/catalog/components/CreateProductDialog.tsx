@@ -1,6 +1,6 @@
 // src/app/pages/catalog/components/CreateProductDialog.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,24 +8,23 @@ import {
   DialogActions,
   Button,
   TextField,
-  Stack,
-  MenuItem
+  Stack
 } from '@mui/material';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Product } from '../../../../domain/models/Product'; // مسیر مدل را چک کنید
 
-// 1. تعریف Schema با Zod برای اعتبارسنجی
+// تعریف اسکیما
 const createProductSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   category: z.string().min(1, "Category is required"),
   summary: z.string().optional(),
   description: z.string().optional(),
-  imageFile: z.string().optional(), // فعلاً استرینگ می‌گیریم طبق درخواست
+  imageFile: z.string().optional(),
   price: z.number().min(0.01, "Price must be greater than 0"),
 });
 
-// استخراج تایپ از اسکیما
 export type CreateProductInputs = z.infer<typeof createProductSchema>;
 
 interface CreateProductDialogProps {
@@ -33,19 +32,22 @@ interface CreateProductDialogProps {
   onClose: () => void;
   onSubmit: (data: CreateProductInputs) => void;
   isLoading?: boolean;
+  productToEdit?: Product | null; // ✅ پراپ جدید: محصولی که باید ویرایش شود
 }
 
 export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
   open,
   onClose,
   onSubmit,
-  isLoading = false
+  isLoading = false,
+  productToEdit
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<CreateProductInputs>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
@@ -58,7 +60,33 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
     }
   });
 
-  // هندل کردن بستن فرم و ریست کردن آن
+  // ✅ لاجیک حرفه‌ای: پر کردن فرم هنگام باز شدن در حالت ویرایش
+  useEffect(() => {
+    if (open) {
+      if (productToEdit) {
+        // حالت Edit: پر کردن فرم با داده‌های موجود
+        reset({
+          name: productToEdit.name,
+          category: productToEdit.category,
+          summary: productToEdit.summary,
+          description: productToEdit.description,
+          imageFile: productToEdit.imageFile,
+          price: productToEdit.price
+        });
+      } else {
+        // حالت Create: خالی کردن فرم
+        reset({
+          name: '',
+          category: '',
+          summary: '',
+          description: '',
+          imageFile: 'default.png',
+          price: 0
+        });
+      }
+    }
+  }, [open, productToEdit, reset]);
+
   const handleClose = () => {
     reset();
     onClose();
@@ -66,18 +94,18 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
 
   const handleFormSubmit: SubmitHandler<CreateProductInputs> = (data) => {
     onSubmit(data);
-    // نکته: ریست کردن فرم را معمولاً پس از موفقیت آمیز بودن API انجام می‌دهیم
-    // اما اینجا فعلا فقط لاجیک UI مدنظر است.
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Product</DialogTitle>
+      {/* تغییر داینامیک تیتر */}
+      <DialogTitle>
+        {productToEdit ? `Edit Product: ${productToEdit.name}` : 'Add New Product'}
+      </DialogTitle>
       
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent dividers>
           <Stack spacing={2}>
-            {/* Product Name */}
             <TextField
               label="Product Name"
               fullWidth
@@ -85,8 +113,6 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
               error={!!errors.name}
               helperText={errors.name?.message}
             />
-
-            {/* Category */}
             <TextField
               label="Category"
               fullWidth
@@ -94,8 +120,6 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
               error={!!errors.category}
               helperText={errors.category?.message}
             />
-
-             {/* Price */}
              <TextField
               label="Price"
               type="number"
@@ -104,8 +128,6 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
               error={!!errors.price}
               helperText={errors.price?.message}
             />
-
-            {/* Summary */}
             <TextField
               label="Summary"
               multiline
@@ -113,8 +135,6 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
               fullWidth
               {...register('summary')}
             />
-
-            {/* Description */}
             <TextField
               label="Description"
               multiline
@@ -122,8 +142,6 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
               fullWidth
               {...register('description')}
             />
-
-            {/* Image File (Placeholder for now) */}
             <TextField
               label="Image File Name"
               fullWidth
@@ -142,7 +160,8 @@ export const CreateProductDialog: React.FC<CreateProductDialogProps> = ({
             color="primary"
             disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Create Product'}
+            {/* تغییر داینامیک متن دکمه */}
+            {isLoading ? 'Saving...' : (productToEdit ? 'Update Changes' : 'Create Product')}
           </Button>
         </DialogActions>
       </form>

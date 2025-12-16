@@ -1,20 +1,31 @@
 // src/app/pages/catalog/ProductListPage.tsx
 
 import { useEffect, useState, useCallback } from 'react';
-import { Box, Typography, Paper, Button, IconButton, Tooltip } from '@mui/material'; // IconButton اضافه شد
+import { Box, Typography, Paper, Button, IconButton, Tooltip } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete'; // آیکون حذف اضافه شد
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 import { catalogService } from '../../../domain/services/catalogService';
 import { Product } from '../../../domain/models/Product';
 import { CreateProductDialog, CreateProductInputs } from './components/CreateProductDialog';
+// ✅ ایمپورت کامپوننت جدید
+import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog';
 
 export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
+  // States for Create/Edit Dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // ✅ States for Delete Dialog
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -32,57 +43,86 @@ export default function ProductListPage() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleOpenCreate = () => setIsCreateOpen(true);
-  const handleCloseCreate = () => setIsCreateOpen(false);
+  // --- Handlers for Create/Edit ---
+  const handleOpenCreate = () => {
+    setSelectedProduct(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedProduct(null);
+  };
 
   const generateMongoId = () => {
     return [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
   };
 
-  const handleCreateSubmit = async (data: CreateProductInputs) => {
+  const handleFormSubmit = async (data: CreateProductInputs) => {
     try {
       setIsSaving(true);
-      const newId = generateMongoId();
-      await catalogService.createProduct({
-        id: newId, 
-        name: data.name,
-        category: data.category,
-        price: Number(data.price),
-        summary: data.summary || '',
-        description: data.description || '',
-        imageFile: data.imageFile || 'default.png'
-      });
-      handleCloseCreate();
+      if (selectedProduct) {
+        await catalogService.updateProduct({
+          id: selectedProduct.id,
+          name: data.name,
+          category: data.category,
+          price: Number(data.price),
+          summary: data.summary || '',
+          description: data.description || '',
+          imageFile: data.imageFile || 'default.png'
+        });
+      } else {
+        const newId = generateMongoId();
+        await catalogService.createProduct({
+          id: newId, 
+          name: data.name,
+          category: data.category,
+          price: Number(data.price),
+          summary: data.summary || '',
+          description: data.description || '',
+          imageFile: data.imageFile || 'default.png'
+        });
+      }
+      handleCloseDialog();
       await fetchProducts(); 
     } catch (error: any) {
-      console.error("Failed to create product", error);
-      if (error.response && error.response.data) {
-        alert(`Error: ${JSON.stringify(error.response.data)}`);
-      } else {
-        alert("Error creating product! Check console for details.");
-      }
+      console.error("Operation failed", error);
+      alert("Operation failed! Check console.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // ✅ متد جدید: هندل کردن حذف محصول
-  const handleDelete = async (id: string) => {
-    // 1. تاییدیه گرفتن از کاربر (UX ساده)
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+  // --- ✅ Handlers for Delete ---
+  
+  // 1. فقط دیالوگ را باز می‌کند و ID را ست می‌کند
+  const handleRequestDelete = (id: string) => {
+    setDeleteTargetId(id);
+    setIsDeleteOpen(true);
+  };
+
+  // 2. وقتی کاربر دکمه قرمز Delete را در دیالوگ زد
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
 
     try {
-      setLoading(true); // نشان دادن حالت لودینگ روی جدول
+      setIsDeleting(true); // لودینگ روی دکمه دیالوگ
+      await catalogService.deleteProduct(deleteTargetId);
       
-      // 2. صدا زدن سرویس حذف
-      await catalogService.deleteProduct(id);
-      
-      // 3. رفرش کردن لیست
+      // بستن و رفرش
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
       await fetchProducts();
     } catch (error) {
       console.error("Failed to delete product", error);
-      alert("Failed to delete product. Please try again.");
-      setLoading(false); // اگر خطا داد، لودینگ را خاموش کن
+      alert("Failed to delete product.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -113,18 +153,28 @@ export default function ProductListPage() {
         </Box>
       )
     },
-    // ✅ ستون جدید: Actions
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 100,
-      sortable: false, // دکمه‌ها نباید سورت شوند
+      width: 120,
+      sortable: false,
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
+          <Tooltip title="Edit Product">
+            <IconButton 
+              color="primary" 
+              onClick={() => handleOpenEdit(params.row as Product)}
+              size="small"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="Delete Product">
             <IconButton 
               color="error" 
-              onClick={() => handleDelete(params.row.id)}
+              // ✅ تغییر هندلر به تابع جدید
+              onClick={() => handleRequestDelete(params.row.id)}
               size="small"
             >
               <DeleteIcon />
@@ -167,11 +217,23 @@ export default function ProductListPage() {
         />
       </Paper>
 
+      {/* Dialog for Create/Edit */}
       <CreateProductDialog 
-        open={isCreateOpen}
-        onClose={handleCloseCreate}
-        onSubmit={handleCreateSubmit}
+        open={isDialogOpen}
+        onClose={handleCloseDialog}
+        onSubmit={handleFormSubmit}
         isLoading={isSaving}
+        productToEdit={selectedProduct}
+      />
+
+      {/* ✅ Dialog for Delete Confirmation */}
+      <ConfirmDialog 
+        open={isDeleteOpen}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteOpen(false)}
+        isLoading={isDeleting}
       />
     </Box>
   );
