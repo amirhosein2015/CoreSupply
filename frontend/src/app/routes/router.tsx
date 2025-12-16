@@ -5,9 +5,10 @@ import LoginPage from './LoginPage';
 import LandingPage from '../../App'; 
 import DashboardPage from '../dashboard/DashboardPage';
 import MainLayout from '../../shared/ui/MainLayout';
-
-// ✅ اصلاح مسیر: اشاره به پوشه catalog
 import ProductListPage from '../pages/catalog/ProductListPage';
+
+// ✅ ایمپورت صفحه جدید سبد خرید
+import BasketPage from '../pages/basket/BasketPage';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,11 @@ export const router = createBrowserRouter([
       {
         path: '/catalog',
         element: <ProductListPage />,
+      },
+      // ✅ مسیر جدید برای سبد خرید
+      {
+        path: '/basket',
+        element: <BasketPage />,
       },
       {
         path: '/orders',

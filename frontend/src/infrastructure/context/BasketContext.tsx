@@ -1,14 +1,16 @@
 // src/infrastructure/context/BasketContext.tsx
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { ShoppingCart, BasketItem } from '../../domain/models/Basket';
+import { ShoppingCart } from '../../domain/models/Basket';
 import { basketService } from '../../domain/services/basketService';
-import { useAuth } from '../auth/AuthContext'; // نیاز داریم تا بدانیم چه کسی لاگین کرده
+import { useAuth } from '../auth/AuthContext';
 
 interface BasketContextType {
   basket: ShoppingCart | null;
-  itemCount: number; // تعداد کل آیتم‌ها برای نمایش در بج (Badge)
-  addToBasket: (product: any) => Promise<void>; // product type can be refined
+  itemCount: number;
+  addToBasket: (product: any) => Promise<void>;
+  removeFromBasket: (productId: string) => Promise<void>; // ✅ متد جدید
+  totalPrice: number; // ✅ قیمت کل
   loading: boolean;
 }
 
@@ -19,7 +21,6 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [basket, setBasket] = useState<ShoppingCart | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 1. لود کردن سبد خرید هنگام لاگین
   useEffect(() => {
     const loadBasket = async () => {
       if (isAuthenticated && user?.username) {
@@ -37,22 +38,19 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     loadBasket();
   }, [isAuthenticated, user]);
 
-  // 2. محاسبه تعداد کل آیتم‌ها
   const itemCount = basket?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  
+  // محاسبه قیمت کل سبد
+  const totalPrice = basket?.items.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
 
-  // 3. متد افزودن به سبد
   const addToBasket = useCallback(async (product: any) => {
     if (!user?.username || !basket) return;
-
-    // کپی عمیق از آیتم‌های فعلی
     const currentItems = [...basket.items];
     const existingItemIndex = currentItems.findIndex(i => i.productId === product.id);
 
     if (existingItemIndex >= 0) {
-      // اگر محصول هست، تعدادش را زیاد کن
       currentItems[existingItemIndex].quantity += 1;
     } else {
-      // اگر نیست، اضافه کن
       currentItems.push({
         productId: product.id,
         productName: product.name,
@@ -62,24 +60,29 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     }
 
-    // آپدیت لوکال (Optimistic Update)
-    const updatedBasket: ShoppingCart = {
-      ...basket,
-      items: currentItems
-    };
+    const updatedBasket = { ...basket, items: currentItems };
     setBasket(updatedBasket);
+    await basketService.updateBasket(updatedBasket);
+  }, [basket, user]);
 
-    // آپدیت سرور
-    try {
-      await basketService.updateBasket(updatedBasket);
-    } catch (err) {
-      console.error("Failed to sync basket with server", err);
-      // اینجا می‌توانیم رول‌بک کنیم (Rollback) ولی برای سادگی فعلا نمی‌کنیم
-    }
+  // ✅ پیاده‌سازی متد حذف
+  const removeFromBasket = useCallback(async (productId: string) => {
+    if (!user?.username || !basket) return;
+    
+    // فیلتر کردن آیتم حذف شده
+    const updatedItems = basket.items.filter(item => item.productId !== productId);
+    
+    const updatedBasket = { ...basket, items: updatedItems };
+    
+    // آپدیت UI
+    setBasket(updatedBasket);
+    
+    // آپدیت Server
+    await basketService.updateBasket(updatedBasket);
   }, [basket, user]);
 
   return (
-    <BasketContext.Provider value={{ basket, itemCount, addToBasket, loading }}>
+    <BasketContext.Provider value={{ basket, itemCount, addToBasket, removeFromBasket, totalPrice, loading }}>
       {children}
     </BasketContext.Provider>
   );
