@@ -6,13 +6,14 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // ✅ آیکون جدید
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
 
 import { catalogService } from '../../../domain/services/catalogService';
 import { Product } from '../../../domain/models/Product';
 import { CreateProductDialog, CreateProductInputs } from './components/CreateProductDialog';
 import { ConfirmDialog } from '../../../shared/ui/ConfirmDialog';
-import { useBasket } from '../../../infrastructure/context/BasketContext'; // ✅ هوک جدید
+import { useBasket } from '../../../infrastructure/context/BasketContext'; 
+import { useToast } from '../../../infrastructure/context/ToastContext'; // ✅ سیستم نوتیفیکیشن
 
 export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,8 +29,8 @@ export default function ProductListPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ✅ دسترسی به متد سبد خرید
   const { addToBasket } = useBasket();
+  const { showToast } = useToast(); // ✅ دریافت متد نوتیفیکیشن
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -38,10 +39,11 @@ export default function ProductListPage() {
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products", error);
+      showToast("Failed to load products", 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchProducts();
@@ -80,6 +82,7 @@ export default function ProductListPage() {
           description: data.description || '',
           imageFile: data.imageFile || 'default.png'
         });
+        showToast("Product updated successfully", 'success');
       } else {
         const newId = generateMongoId();
         await catalogService.createProduct({
@@ -91,12 +94,13 @@ export default function ProductListPage() {
           description: data.description || '',
           imageFile: data.imageFile || 'default.png'
         });
+        showToast("Product created successfully", 'success');
       }
       handleCloseDialog();
       await fetchProducts(); 
     } catch (error: any) {
       console.error("Operation failed", error);
-      alert("Operation failed! Check console.");
+      showToast("Operation failed! Check console.", 'error');
     } finally {
       setIsSaving(false);
     }
@@ -113,25 +117,26 @@ export default function ProductListPage() {
     try {
       setIsDeleting(true);
       await catalogService.deleteProduct(deleteTargetId);
+      showToast("Product deleted successfully", 'success'); // ✅ پیام حذف
       setIsDeleteOpen(false);
       setDeleteTargetId(null);
       await fetchProducts();
     } catch (error) {
       console.error("Failed to delete product", error);
-      alert("Failed to delete product.");
+      showToast("Failed to delete product", 'error');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // ✅ هندلر ساده برای دکمه خرید
+  // ✅ هندلر خرید با Toast
   const handleAddToCart = async (product: Product) => {
     try {
       await addToBasket(product);
-      alert(`${product.name} added to cart!`); 
+      showToast(`${product.name} added to cart!`, 'success'); 
     } catch (error) {
       console.error(error);
-      alert("Failed to add to cart.");
+      showToast("Failed to add to cart.", 'error');
     }
   };
 
@@ -165,12 +170,11 @@ export default function ProductListPage() {
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 160, // عرض بیشتر برای 3 دکمه
+      width: 160,
       sortable: false,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%' }}>
           
-          {/* ✅ دکمه جدید: افزودن به سبد */}
           <Tooltip title="Add to Cart">
             <IconButton 
               color="success" 
@@ -237,7 +241,6 @@ export default function ProductListPage() {
         />
       </Paper>
 
-      {/* Dialog for Create/Edit */}
       <CreateProductDialog 
         open={isDialogOpen}
         onClose={handleCloseDialog}
@@ -246,7 +249,6 @@ export default function ProductListPage() {
         productToEdit={selectedProduct}
       />
 
-      {/* Dialog for Delete Confirmation */}
       <ConfirmDialog 
         open={isDeleteOpen}
         title="Delete Product"

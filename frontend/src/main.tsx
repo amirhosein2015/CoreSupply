@@ -6,8 +6,9 @@ import { CssBaseline, ThemeProvider } from '@mui/material'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './app/routes/router'
 import { AuthProvider } from './infrastructure/auth/AuthContext'
+import { BasketProvider } from './infrastructure/context/BasketContext'
 // ✅ ایمپورت جدید
-import { BasketProvider } from './infrastructure/context/BasketContext' 
+import { ToastProvider } from './infrastructure/context/ToastContext' 
 import { industrialTheme } from './shared/ui/theme'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -15,12 +16,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider theme={industrialTheme}>
       <CssBaseline />
       <AuthProvider>
-        {/* ✅ BasketProvider باید فرزند AuthProvider باشد تا به user دسترسی داشته باشد */}
         <BasketProvider>
-          <RouterProvider router={router} />
+          {/* ✅ اضافه کردن سیستم نوتیفیکیشن */}
+          <ToastProvider> 
+            <RouterProvider router={router} />
+          </ToastProvider>
         </BasketProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>,
 )
-
