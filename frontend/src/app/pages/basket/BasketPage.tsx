@@ -10,22 +10,30 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 
+// ✅ اصلاح مسیر: ۳ پله عقب (چون پوشه اضافه پاک شد)
 import { useBasket } from '../../../infrastructure/context/BasketContext';
+import { BasketItem } from '../../../domain/models/Basket'; // مسیر مدل هم ۳ پله است
 
 export default function BasketPage() {
   const { basket, removeFromBasket, totalPrice } = useBasket();
   const navigate = useNavigate();
 
-  // حالت سبد خالی
-  if (!basket || basket.items.length === 0) {
+  // 1. فیلتر کردن و تایپ‌دهی صریح
+  const validItems: BasketItem[] = (basket?.items || []).filter((item: any) => {
+    return item && (item.componentName || item.productName || item.name);
+  }).map((item: any) => ({
+    componentId: item.componentId || item.productId,
+    componentName: item.componentName || item.productName || item.name,
+    unitPrice: item.unitPrice || item.price || 0,
+    quantity: item.quantity || 1
+  }));
+
+  if (!basket || validItems.length === 0) {
     return (
       <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
         <ShoppingBagIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
         <Typography variant="h5" color="text.secondary" gutterBottom>
           Your cart is empty
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Looks like you haven't added anything to your cart yet.
         </Typography>
         <Button variant="contained" onClick={() => navigate('/catalog')}>
           Go to Catalog
@@ -40,22 +48,21 @@ export default function BasketPage() {
         Shopping Cart
       </Typography>
 
-      {/* چیدمان اصلی: در دسکتاپ افقی، در موبایل عمودی */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
         
-        {/* بخش سمت چپ: لیست آیتم‌ها (70% فضا) */}
         <Box sx={{ flex: 2 }}>
           <Paper elevation={2} sx={{ overflow: 'hidden' }}>
             <List sx={{ p: 0 }}>
-              {basket.items.map((item, index) => (
-                <React.Fragment key={item.productId}>
+              {/* ✅ اصلاح تایپ ایندکس */}
+              {validItems.map((item, index: number) => (
+                <React.Fragment key={item.componentId || index}>
                   <ListItem
                     alignItems="flex-start"
                     secondaryAction={
                       <IconButton 
                         edge="end" 
                         color="error" 
-                        onClick={() => removeFromBasket(item.productId)}
+                        onClick={() => removeFromBasket(item.componentId)}
                         title="Remove Item"
                       >
                         <DeleteIcon />
@@ -68,20 +75,20 @@ export default function BasketPage() {
                         variant="rounded" 
                         sx={{ width: 64, height: 64, mr: 2, bgcolor: 'primary.light', fontSize: '1.5rem' }}
                       >
-                        {item.productName.charAt(0).toUpperCase()}
+                        {(item.componentName || "U").charAt(0).toUpperCase()}
                       </Avatar>
                     </ListItemAvatar>
                     
                     <ListItemText
                       primary={
                         <Typography variant="h6" fontWeight="bold" sx={{ mb: 0.5 }}>
-                          {item.productName}
+                          {item.componentName}
                         </Typography>
                       }
                       secondary={
                         <Stack spacing={0.5}>
                           <Typography variant="body2" color="text.secondary">
-                            Unit Price: <b>${item.price}</b>
+                            Unit Price: <b>${item.unitPrice}</b>
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             Quantity: <b>{item.quantity}</b>
@@ -90,23 +97,20 @@ export default function BasketPage() {
                       }
                     />
                     
-                    {/* قیمت کل آیتم (سمت راست لیست) */}
                     <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', mr: 2 }}>
                        <Typography variant="h6" fontWeight="bold" color="primary.main">
-                        ${item.price * item.quantity}
+                        ${item.unitPrice * item.quantity}
                       </Typography>
                     </Box>
                   </ListItem>
                   
-                  {/* خط جداکننده بین آیتم‌ها */}
-                  {index < basket.items.length - 1 && <Divider component="li" />}
+                  {index < validItems.length - 1 && <Divider component="li" />}
                 </React.Fragment>
               ))}
             </List>
           </Paper>
         </Box>
 
-        {/* بخش سمت راست: خلاصه فاکتور (30% فضا) */}
         <Box sx={{ flex: 1 }}>
           <Paper elevation={3} sx={{ p: 3, position: 'sticky', top: 80 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold">
@@ -118,10 +122,6 @@ export default function BasketPage() {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography color="text.secondary">Subtotal</Typography>
                 <Typography fontWeight="bold">${totalPrice}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography color="text.secondary">Tax (VAT 0%)</Typography>
-                <Typography fontWeight="bold">$0</Typography>
               </Box>
             </Stack>
             
@@ -139,7 +139,7 @@ export default function BasketPage() {
               color="primary" 
               fullWidth 
               size="large"
-              onClick={() => alert('Proceed to Checkout (Order Saga) - Coming Next!')}
+              onClick={() => navigate('/checkout')}
               sx={{ py: 1.5, mb: 2, fontWeight: 'bold' }}
             >
               Checkout Now
@@ -155,7 +155,6 @@ export default function BasketPage() {
             </Button>
           </Paper>
         </Box>
-
       </Stack>
     </Box>
   );

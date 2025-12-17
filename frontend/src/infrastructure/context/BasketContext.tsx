@@ -9,8 +9,8 @@ interface BasketContextType {
   basket: ShoppingCart | null;
   itemCount: number;
   addToBasket: (product: any) => Promise<void>;
-  removeFromBasket: (productId: string) => Promise<void>; // ✅ متد جدید
-  totalPrice: number; // ✅ قیمت کل
+  removeFromBasket: (productId: string) => Promise<void>;
+  totalPrice: number;
   loading: boolean;
 }
 
@@ -27,6 +27,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setLoading(true);
         try {
           const data = await basketService.getBasket(user.username);
+          if (!data.buyerId) data.buyerId = user.username;
           setBasket(data);
         } catch (err) {
           console.error("Failed to load basket", err);
@@ -39,45 +40,52 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isAuthenticated, user]);
 
   const itemCount = basket?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
-  
-  // محاسبه قیمت کل سبد
-  const totalPrice = basket?.items.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
+  const totalPrice = basket?.items.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
 
   const addToBasket = useCallback(async (product: any) => {
-    if (!user?.username || !basket) return;
-    const currentItems = [...basket.items];
-    const existingItemIndex = currentItems.findIndex(i => i.productId === product.id);
+    if (!user?.username) return;
+
+    const currentBasket = basket || { buyerId: user.username, items: [] };
+    const currentItems = [...currentBasket.items];
+    
+    // ✅ اصلاح: componentId
+    const existingItemIndex = currentItems.findIndex(i => i.componentId === product.id);
 
     if (existingItemIndex >= 0) {
       currentItems[existingItemIndex].quantity += 1;
     } else {
       currentItems.push({
-        productId: product.id,
-        productName: product.name,
-        price: product.price,
-        quantity: 1,
-        color: 'Default'
+        // ✅ اصلاح نام فیلدها طبق درخواست سرور
+        componentId: product.id,      
+        componentName: product.name,  
+        unitPrice: product.price,
+        quantity: 1
       });
     }
 
-    const updatedBasket = { ...basket, items: currentItems };
+    const updatedBasket: ShoppingCart = {
+      buyerId: user.username,
+      items: currentItems
+    };
+
+    console.log("🚀 SENDING FIXED JSON:", JSON.stringify(updatedBasket, null, 2));
+
     setBasket(updatedBasket);
     await basketService.updateBasket(updatedBasket);
   }, [basket, user]);
 
-  // ✅ پیاده‌سازی متد حذف
   const removeFromBasket = useCallback(async (productId: string) => {
     if (!user?.username || !basket) return;
     
-    // فیلتر کردن آیتم حذف شده
-    const updatedItems = basket.items.filter(item => item.productId !== productId);
+    // ✅ اصلاح: componentId
+    const updatedItems = basket.items.filter(item => item.componentId !== productId);
     
-    const updatedBasket = { ...basket, items: updatedItems };
+    const updatedBasket: ShoppingCart = {
+      buyerId: basket.buyerId || user.username,
+      items: updatedItems
+    };
     
-    // آپدیت UI
     setBasket(updatedBasket);
-    
-    // آپدیت Server
     await basketService.updateBasket(updatedBasket);
   }, [basket, user]);
 

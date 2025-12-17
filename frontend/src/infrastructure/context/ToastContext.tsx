@@ -28,13 +28,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      
-      {/* کامپوننت UI که همیشه در برنامه وجود دارد */}
       <Snackbar 
         open={open} 
-        autoHideDuration={3000} // بعد از 3 ثانیه محو شود
+        autoHideDuration={3000} 
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} // موقعیت: پایین راست
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} 
       >
         <Alert onClose={handleClose} severity={severity} variant="filled" sx={{ width: '100%' }}>
           {message}
@@ -44,6 +42,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
+// ✅ این خط بسیار مهم است:
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) throw new Error("useToast must be used within ToastProvider");

@@ -2,14 +2,14 @@
 
 export interface BasketItem {
   quantity: number;
-  color?: string;      // برای آینده (Optional)
-  price: number;
-  productId: string;
-  productName: string;
+  unitPrice: number;
+  // ✅ تغییر نام فیلدها طبق خطای سرور
+  componentId: string;   
+  componentName: string; 
 }
 
 export interface ShoppingCart {
-  userName: string;    // کلید اصلی در Redis (معمولاً ایمیل یا ID کاربر)
+  buyerId: string;
   items: BasketItem[];
-  totalPrice?: number; // محاسبه شده در فرانت یا بک
+  totalPrice?: number;
 }

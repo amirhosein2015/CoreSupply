@@ -2,6 +2,7 @@
 
 import { httpClient } from '../../infrastructure/api/httpClient';
 import { ShoppingCart } from '../models/Basket';
+import { BasketCheckout } from '../models/Order';
 
 export const basketService = {
   // دریافت سبد خرید کاربر
@@ -10,19 +11,24 @@ export const basketService = {
       const response = await httpClient.get<ShoppingCart>(`/basket/${userName}`);
       return response.data;
     } catch (error) {
-      // اگر سبد خرید وجود نداشت (404)، یک سبد خالی برمی‌گردانیم
-      return { userName, items: [] };
+   // ✅ اصلاح: استفاده از buyerId
+      return { buyerId: userName, items: [] };
     }
   },
 
-  // آپدیت سبد خرید (افزودن/حذف آیتم)
+  // آپدیت سبد خرید
   updateBasket: async (basket: ShoppingCart): Promise<ShoppingCart> => {
     const response = await httpClient.post<ShoppingCart>('/basket', basket);
     return response.data;
   },
 
-  // حذف کامل سبد خرید (بعد از ثبت سفارش)
+  // حذف کامل سبد خرید
   deleteBasket: async (userName: string): Promise<void> => {
     await httpClient.delete(`/basket/${userName}`);
+  }, // ✅ کاما اضافه شد
+
+  // ✅ متد چک‌اوت
+  checkout: async (checkoutData: BasketCheckout): Promise<void> => {
+    await httpClient.post('/basket/checkout', checkoutData);
   }
 };
