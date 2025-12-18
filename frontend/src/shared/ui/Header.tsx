@@ -1,76 +1,60 @@
 // src/shared/ui/Header.tsx
-
 import React from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Badge, Box, Avatar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
 import LogoutIcon from '@mui/icons-material/Logout';
-
-// ✅ اضافه کردن هوک مسیریابی
 import { useNavigate } from 'react-router-dom';
-
 import { useAuth } from '../../infrastructure/auth/AuthContext';
 import { useBasket } from '../../infrastructure/context/BasketContext';
 
 interface HeaderProps {
   drawerWidth: number;
+  onDrawerToggle: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ drawerWidth }) => {
+const Header: React.FC<HeaderProps> = ({ drawerWidth, onDrawerToggle }) => {
   const { user, logout } = useAuth();
   const { itemCount } = useBasket(); 
-  
-  // ✅ تعریف هوک مسیریابی
   const navigate = useNavigate();
 
   return (
     <AppBar
       position="fixed"
       sx={{
-        width: `calc(100% - ${drawerWidth}px)`,
-        ml: `${drawerWidth}px`,
-        bgcolor: 'background.paper',
-        color: 'text.primary',
-        boxShadow: 1
+        width: { md: `calc(100% - ${drawerWidth}px)` },
+        ml: { md: `${drawerWidth}px` },
+        bgcolor: 'rgba(10, 25, 47, 0.9)',
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid rgba(0, 229, 255, 0.2)',
+        boxShadow: 'none',
+        zIndex: (theme) => theme.zIndex.drawer + 1, // بالاتر از سایدبار
       }}
     >
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          sx={{ mr: 2, display: { sm: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
-
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Dashboard
-        </Typography>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* دکمه منو - فقط در موبایل (md به پایین) */}
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={onDrawerToggle}
+            sx={{ mr: 2, display: { md: 'none' }, color: 'primary.main' }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: 1, fontSize: '0.85rem' }}>
+            TERMINAL_ID / {user?.username?.split('@')[0].toUpperCase() || 'GUEST'}
+          </Typography>
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          
-          {/* ✅ دکمه سبد خرید با قابلیت کلیک و انتقال به صفحه سبد */}
-          <IconButton 
-            color="inherit" 
-            onClick={() => navigate('/basket')}
-          >
+          <IconButton color="inherit" onClick={() => navigate('/basket')}>
             <Badge badgeContent={itemCount} color="error">
-              <ShoppingCartIcon />
+              <ShoppingCartIcon fontSize="small" />
             </Badge>
           </IconButton>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-              {user?.username?.charAt(0).toUpperCase()}
-            </Avatar>
-            <Typography variant="body2" fontWeight="bold">
-              {user?.username}
-            </Typography>
-          </Box>
-
-          <IconButton color="inherit" onClick={logout} title="Logout">
-            <LogoutIcon />
+          <IconButton color="inherit" onClick={logout} size="small">
+            <LogoutIcon fontSize="small" />
           </IconButton>
         </Box>
       </Toolbar>
