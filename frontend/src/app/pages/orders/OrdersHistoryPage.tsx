@@ -28,7 +28,7 @@ export default function OrdersHistoryPage() {
         const data = await orderService.getOrdersByUser(identifier);
         setOrders(data);
       } catch (err) {
-        setError("SAGA_LINK_FAILURE");
+        setError("SAGA_LINK_FAILURE: SYSTEM_OFFLINE");
       } finally {
         setLoading(false);
       }

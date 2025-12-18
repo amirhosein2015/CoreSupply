@@ -1,5 +1,3 @@
-// src/infrastructure/context/BasketContext.tsx
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ShoppingCart } from '../../domain/models/Basket';
 import { basketService } from '../../domain/services/basketService';
@@ -10,7 +8,7 @@ interface BasketContextType {
   itemCount: number;
   addToBasket: (product: any) => Promise<void>;
   removeFromBasket: (productId: string) => Promise<void>;
-  clearBasket: () => void; // ✅ اضافه شد
+  clearBasket: () => void;
   totalPrice: number;
   loading: boolean;
 }
@@ -31,7 +29,7 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (!data.buyerId) data.buyerId = user.username;
           setBasket(data);
         } catch (err) {
-          console.error("Failed to load basket", err);
+          // لاگ‌های خطای بحرانی در محیط بیلد حذف نمی‌شوند
         } finally {
           setLoading(false);
         }
@@ -43,7 +41,6 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const itemCount = basket?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
   const totalPrice = basket?.items.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
 
-  // ✅ متد جدید برای خالی کردن سبد
   const clearBasket = useCallback(() => {
     setBasket(null);
   }, []);
@@ -97,4 +94,3 @@ export const useBasket = () => {
   if (!context) throw new Error("useBasket must be used within BasketProvider");
   return context;
 };
-

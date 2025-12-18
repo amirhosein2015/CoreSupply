@@ -37,7 +37,7 @@ export default function ProductListPage() {
       const data = await catalogService.getProducts();
       setProducts(data);
     } catch (error) {
-      showToast("REGISTRY_CONNECTION_ERROR", 'error');
+      showToast("REGISTRY_OFFLINE", 'error');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function ProductListPage() {
       handleCloseDialog();
       await fetchProducts(); 
     } catch (error) {
-      showToast("TRANSACTION_LOG_ERROR", 'error');
+      showToast("DATABASE_WRITE_ERROR", 'error');
     } finally { setIsSaving(false); }
   };
 
@@ -72,8 +72,9 @@ export default function ProductListPage() {
     try {
       setIsDeleting(true);
       await catalogService.deleteProduct(deleteTargetId);
-      showToast("COMPONENT_REMOVED", 'success');
+      showToast("ASSET_PURGED", 'success');
       setIsDeleteOpen(false);
+      setDeleteTargetId(null);
       await fetchProducts();
     } finally { setIsDeleting(false); }
   };
@@ -85,33 +86,25 @@ export default function ProductListPage() {
       width: 100,
       sortable: false,
       renderCell: (p: any) => {
-        // دیکشنری تصاویر واقعی صنعتی بر اساس کلمات کلیدی
-        const imageMap: { [key: string]: string } = {
-          'wheel': 'https://images.unsplash.com/photo-1486049093342-98ed3403ba02?w=100&h=100&fit=crop',
-          'gear': 'https://images.unsplash.com/photo-1530124560676-1adc822703aa?w=100&h=100&fit=crop',
-          'engine': 'https://images.unsplash.com/photo-1590846021111-83b983d48b59?w=100&h=100&fit=crop',
-          'motor': 'https://images.unsplash.com/photo-1597439286444-996dc6af6832?w=100&h=100&fit=crop',
-          'circuit': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop',
-          'chip': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=100&h=100&fit=crop',
-          'valve': 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=100&h=100&fit=crop',
-          'box': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=100&h=100&fit=crop'
-        };
-
-        // ۱. عکس پیش‌فرض صنعتی (اگر اسم بی‌سر و ته بود این نمایش داده می‌شود)
-        const defaultBlueprint = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop';
-
         const name = p.row.name?.toLowerCase() || '';
+        const id = p.row.id || 'default';
+        const imageMap: { [key: string]: string } = {
+          'wheel': 'https://images.unsplash.com/photo-1486049093342-98ed3403ba02?w=100',
+          'gear': 'https://images.unsplash.com/photo-1530124560676-1adc822703aa?w=100',
+          'engine': 'https://images.unsplash.com/photo-1590846021111-83b983d48b59?w=100',
+          'circuit': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=100',
+          'chip': 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=100',
+          'box': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=100'
+        };
         const matchedKey = Object.keys(imageMap).find(key => name.includes(key));
-        
-        // اولویت: ۱. اگر URL در دیتابیس بود. ۲. اگر کلمه کلیدی مچ شد. ۳. عکس پیش‌فرض Blueprint
-        const imageUrl = p.value?.startsWith('http') ? p.value : (matchedKey ? imageMap[matchedKey] : defaultBlueprint);
+        const fallbackUrl = `https://picsum.photos/seed/${id}/100/100?grayscale&blur=1`;
+        const primaryUrl = p.value?.startsWith('http') ? p.value : (matchedKey ? imageMap[matchedKey] : fallbackUrl);
 
         return (
           <Box sx={{ p: 1, display: 'flex', alignItems: 'center', height: '100%' }}>
-            <Box component="img" src={imageUrl} sx={{ 
-              width: 48, height: 48, objectFit: 'cover', border: '1px solid #00e5ff44',
-              filter: 'grayscale(0.3) contrast(1.1)', backgroundColor: '#000'
-            }} />
+            <Box component="img" src={primaryUrl} onError={(e: any) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100'; }}
+              sx={{ width: 48, height: 48, objectFit: 'cover', border: '1px solid rgba(0, 229, 255, 0.3)', filter: 'contrast(1.2) brightness(0.8)', bgcolor: '#000' }} 
+            />
           </Box>
         );
       }
@@ -136,7 +129,7 @@ export default function ProductListPage() {
     },
     { 
       field: 'price', 
-      headerName: 'UNIT_VALUE (USD)', 
+      headerName: 'VALUE (USD)', 
       width: 150,
       renderCell: (p: any) => <Typography sx={{ fontWeight: '900', fontFamily: 'monospace' }}>${p.value?.toLocaleString()}</Typography>
     },
@@ -165,19 +158,8 @@ export default function ProductListPage() {
           </Button>
         </Box>
         <Paper variant="outlined" sx={{ height: 650, bgcolor: 'rgba(10, 25, 47, 0.4)', borderRadius: 0 }}>
-          <DataGrid
-            rows={products}
-            columns={columns}
-            loading={loading}
-            getRowId={(row) => row.id}
-            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            pageSizeOptions={[10, 25, 50]}
-            sx={{
-              border: 0,
-              '& .MuiDataGrid-columnHeaders': { backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'primary.main', fontWeight: '900' },
-              '& .MuiDataGrid-cell': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)' },
-            }}
-          />
+          <DataGrid rows={products} columns={columns} loading={loading} getRowId={(row) => row.id} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} pageSizeOptions={[10, 25, 50]}
+            sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { backgroundColor: 'rgba(0, 229, 255, 0.05)', color: 'primary.main', fontWeight: '900' }, '& .MuiDataGrid-cell': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)' } }} />
         </Paper>
       </Stack>
       <CreateProductDialog open={isDialogOpen} onClose={handleCloseDialog} onSubmit={handleFormSubmit} isLoading={isSaving} productToEdit={selectedProduct} />
