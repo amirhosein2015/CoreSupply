@@ -35,10 +35,9 @@ export interface OrderResponse {
   zipCode: string;
 }
 
-// ✅ اینترفیس اصلاح شده برای نمایش در جدول
 export interface OrderSummary {
-  id: string;          // مطابق با خروجی بک‌اند
-  createdAt: string;   // مطابق با خروجی بک‌اند
-  status: string;      // مطابق با خروجی بک‌اند
-  totalPrice: number;  // مطابق با خروجی بک‌اند
+  id: string;          // مطابق خروجی بک‌اِند
+  createdAt: string;   // مطابق خروجی بک‌اِند
+  status: string;      // مطابق خروجی بک‌اِند
+  totalPrice: number;  // مطابق خروجی بک‌اِند
 }

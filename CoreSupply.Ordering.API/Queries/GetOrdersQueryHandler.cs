@@ -1,8 +1,8 @@
-﻿// Application/Queries/GetOrdersQueryHandler.cs
-using MediatR;
-using CoreSupply.Ordering.API.Infrastructure.Persistence; // ✅ اصلاح شد
-using CoreSupply.Ordering.API.Domain.Entities; // ✅ اصلاح شد
+﻿using MediatR;
+using CoreSupply.Ordering.API.Infrastructure.Persistence;
+using CoreSupply.Ordering.API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System; //  اضافه شد برای Exception
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +12,7 @@ namespace CoreSupply.Ordering.API.Application.Queries
 {
     public class GetOrdersQueryHandler : IRequestHandler<GetOrdersQuery, IEnumerable<Order>>
     {
-        private readonly OrderContext _context; // نام DbContext شما ممکن است فرق کند
+        private readonly OrderContext _context;
 
         public GetOrdersQueryHandler(OrderContext context)
         {
@@ -21,10 +21,24 @@ namespace CoreSupply.Ordering.API.Application.Queries
 
         public async Task<IEnumerable<Order>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
         {
-            var orders = await _context.Orders
-                                       .Where(o => o.UserName == request.UserName)
-                                       .ToListAsync(cancellationToken);
-            return orders;
+            try
+            {
+                // ✅ کوئری با AsNoTracking برای سرعت بیشتر و جلوگیری از کرش دیتابیس
+                var orders = await _context.Orders
+                                           .Where(o => o.UserName == request.UserName)
+                                           .AsNoTracking()
+                                           .ToListAsync(cancellationToken);
+
+                return orders;
+            }
+            catch (Exception ex)
+            {
+                // لاگ کردن خطا در کنسول داکر برای دیباگ بعدی
+                Console.WriteLine($"[CRITICAL] Order DB Access Failed: {ex.Message}");
+
+                // برگرداندن یک لیست خالی به جای کرش کردن کل سرویس
+                return new List<Order>();
+            }
         }
     }
 }
