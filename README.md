@@ -1,10 +1,20 @@
-# 🏭 CoreSupply | Cloud-Native Industrial Supply Chain Platform
+# 🏭 CoreSupply | Cloud-Ready .NET 8 Microservices & Industrial B2B Platform
 
-<!-- Tech Stack & Orchestration -->
+<!-- Core Tech Stack & Infrastructure -->
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-512bd4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+[![React 18](https://img.shields.io/badge/Frontend-React_18-61dafb?style=flat-square&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Tool-Vite-646cff?style=flat-square&logo=vite)](https://vitejs.dev/)
+[![Material UI](https://img.shields.io/badge/UI-Material_UI-007fff?style=flat-square&logo=mui)](https://mui.com/)
 [![Kubernetes](https://img.shields.io/badge/Orchestration-Kubernetes_(K8s)-326ce5?style=flat-square&logo=kubernetes)](https://kubernetes.io/)
 [![Docker](https://img.shields.io/badge/Container-Docker-2496ed?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Status](https://img.shields.io/badge/Status-Cloud_Ready-success?style=flat-square)](https://github.com/amirhosein2015/CoreSupply)
+
+<!-- Polyglot Persistence (Databases) -->
+[![Redis](https://img.shields.io/badge/Cache-Redis-dc382d?style=flat-square&logo=redis)](https://redis.io/)
+[![MongoDB](https://img.shields.io/badge/NoSQL-MongoDB-47a248?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
+[![SQL Server](https://img.shields.io/badge/SQL-SQL_Server-CC2927?style=flat-square&logo=microsoft-sql-server)](https://www.microsoft.com/sql-server)
+[![PostgreSQL](https://img.shields.io/badge/SQL-PostgreSQL-4169e1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 
 <!-- Architecture Patterns (Principal Engineering) -->
 [![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blueviolet?style=flat-square&logo=microservices)](https://github.com/amirhosein2015/CoreSupply)
@@ -16,16 +26,18 @@
 [![Protocol](https://img.shields.io/badge/Protocol-gRPC_(HTTP%2F2)-333333?style=flat-square&logo=grpc)](https://grpc.io/)
 [![Observability](https://img.shields.io/badge/Tracing-OpenTelemetry_%2B_Jaeger-005571?style=flat-square&logo=opentelemetry)](https://opentelemetry.io/)
 
-<!-- Quality Assurance -->
+<!-- Quality Assurance & License -->
 [![CI Pipeline](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/amirhosein2015/CoreSupply/actions/workflows/dotnet-ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-Integration_%26_Unit-success?style=flat-square&logo=testcafe)](https://xunit.net/)
+[![Tests](https://img.shields.io/badge/Tests-Integration_%26_Unit-success?style=flat-square&logo=xunit)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-> **Enterprise-grade, Cloud-Native B2B solution for the DACH market, engineered with modern .NET 8 standards.**
 
-**CoreSupply** is more than just an e-commerce backend; it is a **production-ready distributed system** architected to solve complex industrial procurement challenges. Unlike traditional monoliths, it leverages **Microservices**, **Event-Driven Architecture**, and **Kubernetes Orchestration** to ensure loose coupling, massive scalability, and fault tolerance.
+> **An enterprise-grade, production-ready distributed system engineered to solve mission-critical supply chain challenges using modern Cloud-Native standards.**
 
-The primary goal of this project is to demonstrate **Principal-level** engineering mastery, featuring advanced patterns like **Saga Orchestration**, **Distributed Tracing**, and **Resilient Cloud Deployment**.
+**CoreSupply** is not a simple CRUD application; it is a high-performance **production-ready distributed system** meticulously architected for the **DACH and Netherlands B2B markets**. The platform leverages **Microservices**, **Event-Driven Architecture**, and **Kubernetes Orchestration** to deliver a resilient, loosely coupled infrastructure capable of handling industrial-scale procurement workflows.
+
+This project serves as a comprehensive demonstration of **Principal-level engineering**, showcasing the seamless integration of **Saga Orchestration**, **Distributed Tracing**, and **Resilient Cloud Deployment** within a highly observable ecosystem.
+
 
 ![Microservice Diagram](https://github.com/user-attachments/assets/77fc23ec-1806-4fd9-bb76-f8b93d1b0e78)
 
@@ -81,9 +93,9 @@ graph TD
 ```
 ---
 
-## 🚀 Engineering Excellence & Patterns
+## 🚀 Engineering Excellence & Architectural Depth
 
-This project demonstrates mastery of advanced software engineering concepts required for **Senior/Principal** roles.
+This project serves as a technical deep-dive into **Enterprise-grade engineering patterns**, demonstrating the practical implementation of complex architectural decisions required for **scalable, production-ready distributed systems**.
 
 ### **1. Architecture & Design**
 *   **Microservices:** Fully autonomous services with **Polyglot Persistence** (Mongo, SQL Server, Postgres, Redis, SQLite).
@@ -125,6 +137,24 @@ This project demonstrates mastery of advanced software engineering concepts requ
 *   **Ingress Controller:** Traffic management and routing handled natively within the cluster.
 *   **Deep Dive:** 👉 **[Explore the Kubernetes Manifests](./k8s/)** to see how we manage stateful and stateless workloads.
 
+### **8. Industrial Command Portal (Frontend Architecture)**
+
+*   **Cyber-Industrial UI/UX:** Engineered a high-density "Operations Terminal" using **React 18** and **TypeScript (Strict Mode)**, prioritizing data visibility and professional B2B engineering aesthetics.
+*   **Modular Architecture:** Implemented a DDD-inspired directory structure (**App, Domain, Infrastructure**) to ensure the frontend scales predictably alongside the backend microservices.
+*   **System Telemetry:** Developed SVG-based **Heartbeat Monitors** and **Active Status LEDs** to simulate real-time health checks and node connectivity across the distributed network.
+
+### **9. Full-Stack Integration & Security Standards**
+
+*   **Gateway-Level CORS Enforcement:** Implemented production-ready **Cross-Origin Resource Sharing (CORS)** policies within the **Ocelot API Gateway** to secure the communication bridge between the React SPA and the microservices mesh.
+*   **State Synchronization:** Designed a resilient workflow that triggers **Saga Orchestration** while executing automated **Client-Side Cache Management** upon order initiation.
+*   **Axios Interceptors:** Robust networking layer featuring automated JWT injection, Refresh Token rotation handling, and global error interceptors for unified system feedback.
+
+### **10. Advanced UI Orchestration**
+
+*   **Global State Management:** Centralized management of complex domain states (Identity, Basket, Notifications) using the **React Context API**, ensuring high performance in decoupled UI environments.
+*   **Industrial Data Management:** Leveraged optimized **Material UI DataGrids** to handle large-scale component registries and SAGA transaction histories with high-performance rendering.
+*   **Async Notification System:** Built a centralized **Toast/Snackbar Provider** to handle non-blocking asynchronous feedback from distributed background operations.
+
 ---
 
 ### **🚀 Deep Dive: Distributed Saga Orchestration**
@@ -154,8 +184,12 @@ You have two options to run CoreSupply: **Docker Compose** (Quick Start) or **Ku
 
 ---
 
-### 🟢 Option 1: Docker Compose (Quick Start)
-Best for development and debugging.
+## 🛠️ Deployment & Mission Control
+
+You can evaluate the **CoreSupply** ecosystem using two primary orchestration methods: **Docker Compose** (for rapid local evaluation) or **Kubernetes** (for production-grade simulation).
+
+### **🟢 Option 1: Docker Compose (Quick Start)**
+*Best for rapid evaluation of the full-stack microservices mesh and real-time observability.*
 
 1.  **Clone & Launch:**
     ```bash
@@ -163,44 +197,61 @@ Best for development and debugging.
     cd CoreSupply
     docker-compose up -d --build
     ```
-    *Wait ~60 seconds for SQL Server to initialize.*
+    *Note: Please allow ~60 seconds for SQL Server and RabbitMQ to stabilize after the containers start.*
 
-2.  **Access the System:**
-    *   **Unified API Gateway:** `http://localhost:9000/catalog`
-    *   **Log Dashboard (Seq):** `http://localhost:9880` (admin / Password12!)
-    *   **Tracing (Jaeger):** `http://localhost:16686`
-    *   **RabbitMQ:** `http://localhost:18672` (guest/guest)
+2.  **🚀 Mission Control Entry Points:**
+    *   **Industrial UI Portal:** [http://localhost:3000](http://localhost:3000) (React 18 Command Center)
+    *   **Unified API Gateway:** [http://localhost:9000](http://localhost:9000) (Ocelot Ingress)
+    *   **Identity Management:** [http://localhost:9003/swagger](http://localhost:9003/swagger) (Direct API Access)
+    *   **Distributed Tracing:** [http://localhost:16686](http://localhost:16686) (Jaeger UI)
+    *   **Event Bus Monitor:** [http://localhost:18672](http://localhost:18672) (RabbitMQ Console - guest/guest)
+    *   **Log Dashboard:** [http://localhost:9880](http://localhost:9880) (Seq - admin/Password12!)
 
 ---
 
-### 🔵 Option 2: Kubernetes (Production Simulation)
-Best for validating deployment manifests and microservices orchestration.
+### **🔵 Option 2: Kubernetes (Production Simulation)**
+*Best for validating K8s orchestration, self-healing capabilities, and cloud-native resilience.*
 
-1.  **Setup Namespace & Secrets:**
+1.  **Setup Cluster Infrastructure:**
     ```bash
     kubectl apply -f k8s/0-namespace.yaml
     kubectl apply -f k8s/0-secrets.yaml
-    ```
-
-2.  **Deploy Infrastructure (DBs, Broker):**
-    ```bash
     kubectl apply -f k8s/1-infrastructure/
     ```
 
-3.  **Deploy Microservices:**
+2.  **Deploy Microservices Mesh:**
     ```bash
     kubectl apply -f k8s/2-services/
     ```
 
-4.  **Access (Port Forwarding):**
-    Since Docker Desktop networking can vary, use port-forwarding to access the Gateway:
+3.  **Establish Secure Ingress:**
     ```bash
     kubectl port-forward svc/api-gateway 9000:80 -n coresupply-ns
     ```
-    Now access APIs via `http://localhost:9000`.
+    *The Industrial UI (running on Port 3000) will communicate with the cluster via the forwarded Gateway.*
 
 ---
 
+### **🔑 Demo Credentials (Quick Access)**
+*Use these verified accounts to explore the Saga Ledger and Industrial Component Registry without registration.*
+
+| Role | Username / Email | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Procurement Manager** | `newuser@test.com` | `Password123!` | System Terminal & Registry |
+| **Logistics Operator** | `ali@example.com` | `Password123!` | Order Tracking & Ledger |
+
+> **System Note:** If the local database is reset, you can instantly register a new industrial account through the UI or the [Identity Swagger UI](http://localhost:9003/swagger).
+
+---
+
+### **🛡️ Technical Troubleshooting (Windows Users)**
+If you encounter `Port 9000/9003 is already in use` (a common Windows WinNAT port reservation conflict), execute the following commands in an **Administrator CMD**:
+```cmd
+net stop winnat
+docker-compose up -d
+net start winnat
+```
+---
 ## 📸 Visual Evidence
 
 ### 1. Distributed Tracing (Jaeger)
@@ -218,27 +269,31 @@ Best for validating deployment manifests and microservices orchestration.
 ---
 
 
-## 🔮 Roadmap (Principal Level Goals)
+## 🔮 System Architecture Roadmap & Maturity Matrix
 
-| Phase | Status | Feature | Details |
-| :--- | :--- | :--- | :--- |
-| **1. Foundation** | ✅ Done | Microservices & Infrastructure | Docker, Polyglot Persistence, Event Bus setup. |
-| **2. Security** | ✅ Done | Advanced Auth | Refresh Tokens, RBAC, Secrets Management. |
-| **3. Communication** | ✅ Done | gRPC Integration | Synchronous, high-performance link between Basket & Discount. |
-| **4. Orchestration** | ✅ Done | **Saga Pattern** | Implemented Distributed Transactions (Order -> Inventory -> Payment). |
-| **5. Observability** | ✅ Done | **Distributed Tracing** | Implemented OpenTelemetry and Jaeger for full request visualization. |
-| **6. Deployment** | ✅ Done | **Kubernetes (K8s)** | Full deployment manifests for Infrastructure and Services. |
-| **7. Frontend** | ⏳ Next | **B2B Enterprise Portal** | Developing a modern SPA using **React 18 & TypeScript** with Material UI. |
+This roadmap outlines the evolution of **CoreSupply** from its foundational infrastructure to a fully integrated, mission-critical industrial platform.
+
+| Phase | Status | Technical Domain | Engineering Details |
+| :--- | :---: | :--- | :--- |
+| **1. Foundation** | ✅ Done | Microservices Infrastructure | Docker containerization, Polyglot Persistence, RabbitMQ Event Bus. |
+| **2. Security** | ✅ Done | Enterprise Identity | JWT Bearer Auth, Refresh Token Rotation, RBAC, Gateway CORS Policy. |
+| **3. Communication** | ✅ Done | High-Performance RPC | gRPC integration for low-latency sync links (Basket ➔ Discount). |
+| **4. Orchestration** | ✅ Done | **Distributed Sagas** | Complex state machines for transactional integrity (Order ➔ Stock ➔ Pay). |
+| **5. Observability** | ✅ Done | System Telemetry | Full Distributed Tracing with OpenTelemetry, Jaeger, and Seq logging. |
+| **6. Deployment** | ✅ Done | **Kubernetes (K8s)** | Production-grade manifests for auto-scaling and self-healing nodes. |
+| **7. Frontend** | ✅ Done | **Industrial Operations UI** | React 18 & TypeScript Portal with Real-time Heartbeat & Logistics Ledger. |
 
 ---
 
 ## 👨‍💻 Author
 
-**Abdollah Mohajeri**
-*   *Senior Software Engineer & Cloud Architect*
-*   Focus: Distributed Systems, .NET Ecosystem, Cloud-Native Solutions.
-*   GitHub: [amirhosein2015](https://github.com/amirhosein2015)
+**Abdollah Mohajeri**  
+*Senior Software Engineer | Backend & Cloud Infrastructure Architect*
+
+*   **Focus:** Engineering high-availability distributed systems, .NET 8 Ecosystem, and Cloud-Native Solutions.
+*   **LinkedIn:** [LinkedIn Profile](https://www.linkedin.com/in/abdollah-mohajeri/)
+*   **GitHub:** [amirhosein2015](https://github.com/amirhosein2015)
 
 ---
-*Designed with ❤️ for the Industrial Sector.*
-```
+*Built with precision for the next generation of Industrial Supply Chains.*
+
