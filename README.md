@@ -254,17 +254,27 @@ net start winnat
 ---
 ## 📸 Visual Evidence
 
-### 1. Distributed Tracing (Jaeger)
-*End-to-End trace visualization of the Saga transaction (Basket -> Order -> Inventory -> Payment). Shows the exact latency and path of the request across microservices.*
-![Jaeger Trace](./assets/jaeger-trace-saga.png)
+### **1. Industrial Operations Terminal**
+*The React 18 command center featuring real-time system vitals, heartbeat telemetry, and a high-density industrial interface.*
+![Industrial Dashboard](./assets/screenshots/01-industrial-dashboard.png)
 
-### 2. Observability Dashboard (Seq)
+### **2. Logistics & SAGA Ledger**
+*A centralized view of distributed transactions across the microservices mesh, demonstrating eventual consistency tracking.*
+![Logistics Ledger](./assets/screenshots/02-logistics-saga-ledger.png)
+
+### **3. Distributed Tracing (Jaeger)**
+*End-to-End trace visualization of the Saga transaction (Basket ➔ Order ➔ Inventory ➔ Payment). Shows the exact latency and path of the request across microservices.*
+![Jaeger Tracing](./assets/screenshots/03-distributed-tracing-jaeger.png)
+
+### **4. Observability Dashboard (Seq)**
 *Real-time structured logging aggregation from all microservices, allowing for deep filtering and debugging.*
-![Seq Dashboard](./assets/seq-dashboard.png)
+![Seq Logs](./assets/screenshots/04-centralized-logging-seq.png)
 
-### 3. Automated Integration Tests
+### **5. Automated Integration Tests**
 *Result of running the integration test suite, verifying the correctness of the API endpoints and database interactions.*
-![Test Results](./assets/test-pass.png)
+![Integration Tests](./assets/screenshots/05-test-pass.png)
+
+
 
 ---
 
