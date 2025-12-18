@@ -10,6 +10,7 @@ interface BasketContextType {
   itemCount: number;
   addToBasket: (product: any) => Promise<void>;
   removeFromBasket: (productId: string) => Promise<void>;
+  clearBasket: () => void; // ✅ اضافه شد
   totalPrice: number;
   loading: boolean;
 }
@@ -42,20 +43,21 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const itemCount = basket?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
   const totalPrice = basket?.items.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0) || 0;
 
+  // ✅ متد جدید برای خالی کردن سبد
+  const clearBasket = useCallback(() => {
+    setBasket(null);
+  }, []);
+
   const addToBasket = useCallback(async (product: any) => {
     if (!user?.username) return;
-
     const currentBasket = basket || { buyerId: user.username, items: [] };
     const currentItems = [...currentBasket.items];
     
-    // ✅ اصلاح: componentId
     const existingItemIndex = currentItems.findIndex(i => i.componentId === product.id);
-
     if (existingItemIndex >= 0) {
       currentItems[existingItemIndex].quantity += 1;
     } else {
       currentItems.push({
-        // ✅ اصلاح نام فیلدها طبق درخواست سرور
         componentId: product.id,      
         componentName: product.name,  
         unitPrice: product.price,
@@ -68,29 +70,23 @@ export const BasketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       items: currentItems
     };
 
-    console.log("🚀 SENDING FIXED JSON:", JSON.stringify(updatedBasket, null, 2));
-
     setBasket(updatedBasket);
     await basketService.updateBasket(updatedBasket);
   }, [basket, user]);
 
   const removeFromBasket = useCallback(async (productId: string) => {
     if (!user?.username || !basket) return;
-    
-    // ✅ اصلاح: componentId
     const updatedItems = basket.items.filter(item => item.componentId !== productId);
-    
     const updatedBasket: ShoppingCart = {
       buyerId: basket.buyerId || user.username,
       items: updatedItems
     };
-    
     setBasket(updatedBasket);
     await basketService.updateBasket(updatedBasket);
   }, [basket, user]);
 
   return (
-    <BasketContext.Provider value={{ basket, itemCount, addToBasket, removeFromBasket, totalPrice, loading }}>
+    <BasketContext.Provider value={{ basket, itemCount, addToBasket, removeFromBasket, clearBasket, totalPrice, loading }}>
       {children}
     </BasketContext.Provider>
   );
@@ -101,3 +97,4 @@ export const useBasket = () => {
   if (!context) throw new Error("useBasket must be used within BasketProvider");
   return context;
 };
+

@@ -1,56 +1,56 @@
 {
   "Routes": [
-    // --- Catalog API ---
+    // 1. سفارشات (GET)
     {
-      "DownstreamPathTemplate": "/api/v1/catalog/{everything}",
+      "UpstreamPathTemplate": "/api/v1/Order/{userName}",
+      "UpstreamHttpMethod": [ "Get", "Options" ],
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "catalog.api",
-          "Port": 8080
-        }
-      ],
-      "UpstreamPathTemplate": "/catalog/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-    },
-    // --- Basket API (Quote) ---
-    {
-      "DownstreamPathTemplate": "/api/v1/basket/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "quote.api",
-          "Port": 8081
-        }
-      ],
-      "UpstreamPathTemplate": "/basket/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "DELETE" ]
-    },
-    // --- Ordering API ---
-    {
-      "DownstreamPathTemplate": "/api/v1/order/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/v1/Order/{userName}",
       "DownstreamHostAndPorts": [
         {
           "Host": "ordering.api",
           "Port": 8080
         }
-      ],
-      "UpstreamPathTemplate": "/ordering/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST" ]
+      ]
     },
-    // --- Identity API ---
+    // 2. لاگین
     {
-      "DownstreamPathTemplate": "/api/v1/auth/{everything}",
+      "UpstreamPathTemplate": "/auth/login",
+      "UpstreamHttpMethod": [ "Post", "Options" ],
       "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/v1/Auth/Login",
       "DownstreamHostAndPorts": [
         {
           "Host": "identity.api",
           "Port": 8080
         }
-      ],
-      "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "POST" ]
+      ]
+    },
+    // 3. کاتالوگ
+    {
+      "UpstreamPathTemplate": "/catalog/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
+      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/v1/catalog/{everything}",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog.api",
+          "Port": 8080
+        }
+      ]
+    },
+    // 4. سبد خرید
+    {
+      "UpstreamPathTemplate": "/basket/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "DELETE", "OPTIONS" ],
+      "DownstreamScheme": "http",
+      "DownstreamPathTemplate": "/api/v1/basket/{everything}",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "quote.api",
+          "Port": 8081
+        }
+      ]
     }
   ],
   "GlobalConfiguration": {

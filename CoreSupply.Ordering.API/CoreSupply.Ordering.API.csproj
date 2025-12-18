@@ -30,6 +30,7 @@
     <Folder Include="Application\Responses\" />
     <Folder Include="Application\Queries\" />
     <Folder Include="Domain\Enums\" />
+    <Folder Include="Queries\" />
   </ItemGroup>
 
 </Project>

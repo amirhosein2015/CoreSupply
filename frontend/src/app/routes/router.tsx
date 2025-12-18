@@ -7,9 +7,9 @@ import DashboardPage from '../dashboard/DashboardPage';
 import MainLayout from '../../shared/ui/MainLayout';
 import ProductListPage from '../pages/catalog/ProductListPage';
 import BasketPage from '../pages/basket/BasketPage';
-
-// ✅ ایمپورت صفحه جدید چک‌اوت
 import CheckoutPage from '../pages/basket/CheckoutPage';
+import OrderSuccessPage from '../pages/basket/OrderSuccessPage';
+import OrdersHistoryPage from '../pages/orders/OrdersHistoryPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,14 +35,18 @@ export const router = createBrowserRouter([
         path: '/basket',
         element: <BasketPage />,
       },
-      // ✅ مسیر جدید برای چک‌اوت
       {
         path: '/checkout',
         element: <CheckoutPage />,
       },
+      // ✅ مسیر جدید برای موفقیت سفارش
+      {
+        path: '/order-success',
+        element: <OrderSuccessPage />,
+      },
       {
         path: '/orders',
-        element: <div style={{ padding: 20 }}>🚧 Orders Page (Coming Soon)</div>,
+        element: <OrdersHistoryPage />,
       }
     ]
   },

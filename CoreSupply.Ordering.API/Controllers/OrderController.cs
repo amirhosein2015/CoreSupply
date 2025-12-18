@@ -1,7 +1,12 @@
-﻿using CoreSupply.Ordering.API.Application.Commands;
+﻿// Controllers/OrderController.cs
+using CoreSupply.Ordering.API.Application.Commands;
+using CoreSupply.Ordering.API.Application.Queries; 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CoreSupply.Ordering.API.Domain.Entities; 
 
 namespace CoreSupply.Ordering.API.Controllers
 {
@@ -16,6 +21,7 @@ namespace CoreSupply.Ordering.API.Controllers
             _mediator = mediator;
         }
 
+        // ... متد Post قبلی ...
         [HttpPost(Name = "CheckoutOrder")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<Guid>> CheckoutOrder([FromBody] CreateOrderCommand command)
@@ -24,14 +30,22 @@ namespace CoreSupply.Ordering.API.Controllers
             return Ok(result);
         }
 
+        // ✅ متد جدید
+        [HttpGet("{userName}", Name = "GetOrdersByUserName")]
+        [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrdersByUserName(string userName)
+        {
+            var query = new GetOrdersQuery(userName);
+            var orders = await _mediator.Send(query);
+            return Ok(orders);
+        }
 
+        // ... متد GetOrders قبلی ...
         [HttpGet("admin/all-orders")]
-        [Authorize(Roles = "Admin")] // <--- فقط ادمین
+        [Authorize(Roles = "Admin")]
         public IActionResult GetAllOrders()
         {
             return Ok("This is a secured endpoint for Admins only!");
         }
-
-
     }
 }
