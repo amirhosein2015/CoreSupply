@@ -172,6 +172,31 @@ One of the most complex challenges in distributed systems is managing transactio
     *   ❌ Failure: **Compensation Action** triggers -> A `ReleaseStock` command is sent to Inventory to roll back the reservation.
 
 > **Why Orchestration?** Unlike Choreography, this approach centralizes the business logic, making it easier to monitor, debug, and manage complex workflows with rollbacks.
+---
+## **🔍 Guided Architectural Review (For Technical Leads & Architects)**
+
+To facilitate a smooth evaluation of the system’s distributed nature and to respect your time, I have outlined several entry points. These are intended to provide transparency into how **CoreSupply** handles cross-service coordination and data integrity.
+
+### **1. Service Contracts & API Exploration (Swagger UI)**
+For a deep dive into the individual domain boundaries and service contracts, each microservice is available for isolated exploration via Swagger:
+*   **Identity & Security:** [http://localhost:9003/swagger](http://localhost:9003/swagger)
+*   **Catalog Registry (MongoDB):** [http://localhost:9001/swagger](http://localhost:9001/swagger)
+*   **Distributed Basket (Redis):** [http://localhost:9002/swagger](http://localhost:9002/swagger)
+*   **Ordering & Saga (SQL Server):** [http://localhost:9004/swagger](http://localhost:9004/swagger)
+
+### **2. Observing Distributed Transactions (Jaeger Tracing)**
+To observe the **Event-Driven Saga** in a live environment and see how the system maintains eventual consistency across boundaries, you may find the following steps helpful:
+1.  Initiate a procurement flow (checkout) within the UI.
+2.  Open the [Jaeger UI](http://localhost:16686).
+3.  Search for `ordering-api` to visualize the trace as it navigates through multiple service spans.
+
+### **3. Infrastructure & Messaging Health**
+For those interested in the underlying asynchronous communication and system auditing:
+*   **Event Bus:** Monitor RabbitMQ exchanges and queues at [localhost:18672](http://localhost:18672) (guest/guest).
+*   **Log Audit:** Review centralized structured logs and system events via [Seq](http://localhost:9880) (admin/Password12!).
+
+---
+*I am always open to architectural discussions or feedback regarding these implementation choices.*
 
 ---
 ## 🛠️ How to Run
