@@ -16,7 +16,7 @@
 [![SQL Server](https://img.shields.io/badge/SQL-SQL_Server-CC2927?style=flat-square&logo=microsoft-sql-server)](https://www.microsoft.com/sql-server)
 [![PostgreSQL](https://img.shields.io/badge/SQL-PostgreSQL-4169e1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 
-<!-- Architecture Patterns (Principal Engineering) -->
+<!-- Architecture Patterns  -->
 [![Architecture](https://img.shields.io/badge/Architecture-Event--Driven_Microservices-blueviolet?style=flat-square&logo=microservices)](https://github.com/amirhosein2015/CoreSupply)
 [![Pattern](https://img.shields.io/badge/Pattern-Saga_Orchestration-ff69b4?style=flat-square)](https://masstransit.io/documentation/patterns/saga)
 [![Pattern](https://img.shields.io/badge/Design-DDD_%26_CQRS-blue?style=flat-square)](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/)
@@ -154,6 +154,9 @@ This project serves as a technical deep-dive into **Enterprise-grade engineering
 *   **Global State Management:** Centralized management of complex domain states (Identity, Basket, Notifications) using the **React Context API**, ensuring high performance in decoupled UI environments.
 *   **Industrial Data Management:** Leveraged optimized **Material UI DataGrids** to handle large-scale component registries and SAGA transaction histories with high-performance rendering.
 *   **Async Notification System:** Built a centralized **Toast/Snackbar Provider** to handle non-blocking asynchronous feedback from distributed background operations.
+
+
+> 💡 **Architectural Deep Dive:** For a detailed look at the "Why" behind our technical choices, explore our **[Architecture Decision Records (ADRs)](./docs/adr/)**.
 
 ---
 
